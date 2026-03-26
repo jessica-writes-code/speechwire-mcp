@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "speechwire-mcp"
+version = "0.1.0"
+description = "Model Context Protocol (MCP) server for interacting with SpeechWire tournament management"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Jessica Moore" },
+]
+keywords = ["speechwire", "mcp", "model-context-protocol", "speech-and-debate", "forensics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "mcp>=1.0.0,<2.0",
+    "requests>=2.32.0,<3.0",
+    "beautifulsoup4>=4.12.0,<5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+speechwire-mcp = "speechwiremcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/jessicamoore/SpeechWireMCP"
+Repository = "https://github.com/jessicamoore/SpeechWireMCP"
+Issues = "https://github.com/jessicamoore/SpeechWireMCP/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/speechwiremcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
