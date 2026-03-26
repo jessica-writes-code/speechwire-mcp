@@ -66,7 +66,7 @@ def test_parse_availability_basic():
 # ---------------------------------------------------------------------------
 
 def _make_judge_row(
-    judgeid=1,
+    judge_id=1,
     name="Test Judge",
     team="Test School",
     teamid=10,
@@ -92,19 +92,19 @@ def _make_judge_row(
     blocks_html = "<br/>".join(blocks) if blocks else ""
     return (
         f"<tr>"
-        f"<td><a href='view-judge.php?judgeid={judgeid}'>{name}</a>{coach_suffix}</td>"
+        f"<td><a href='view-judge.php?judgeid={judge_id}'>{name}</a>{coach_suffix}</td>"
         f"{team_cell}"
         f"<td></td>"  # edit button
         f"<td>N/A</td>"  # type
-        f"<td><select name='judgeinactive[{judgeid}]'>"
+        f"<td><select name='judgeinactive[{judge_id}]'>"
         f"<option value='0'{' selected' if active_val == '0' else ''}>ACTIVE</option>"
         f"<option value='1'{' selected' if active_val == '1' else ''}></option>"
         f"</select></td>"
-        f"<td><select name='judgeisclean[{judgeid}]'>"
+        f"<td><select name='judgeisclean[{judge_id}]'>"
         f"<option value='0'{' selected' if clean_val == '0' else ''}></option>"
         f"<option value='1'{' selected' if clean_val == '1' else ''}>CLEAN</option>"
         f"</select></td>"
-        f"<td><select name='judgepriorityupd[{judgeid}]'>"
+        f"<td><select name='judgepriorityupd[{judge_id}]'>"
         f"<option value='0'{' selected' if priority_val == '0' else ''}></option>"
         f"<option value='1'{' selected' if priority_val == '1' else ''}>PRIORITY</option>"
         f"</select></td>"
@@ -125,7 +125,7 @@ def _wrap_table(*rows):
 
 def test_judge_list_happy_path():
     html = _wrap_table(_make_judge_row(
-        judgeid=42, name="Jane Doe", team="Chesapeake Prep", teamid=7,
+        judge_id=42, name="Jane Doe", team="Chesapeake Prep", teamid=7,
         active_val="0", clean_val="1", priority_val="1",
         email="jane@example.com", unavail="Sat., 8:00 AM-5:00 PM",
         blocks=["GROUPING: Varsity Policy Debate", "GROUPING: JV Policy Debate"],
@@ -133,7 +133,7 @@ def test_judge_list_happy_path():
     records = parse_judge_list_from_html(html)
     assert len(records) == 1
     r = records[0]
-    assert r["judgeid"] == 42
+    assert r["judge_id"] == 42
     assert r["name"] == "Jane Doe"
     assert r["team"] == CHESAPEAKE_PREP
     assert r["team_id"] == 7
@@ -146,7 +146,7 @@ def test_judge_list_happy_path():
 
 
 def test_judge_list_inactive_judge():
-    html = _wrap_table(_make_judge_row(judgeid=5, active_val="1"))
+    html = _wrap_table(_make_judge_row(judge_id=5, active_val="1"))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_active"] is False
 
@@ -193,7 +193,7 @@ def test_judge_list_minimal_row():
         "</table>"
     )
     r = parse_judge_list_from_html(html)[0]
-    assert r["judgeid"] == 99
+    assert r["judge_id"] == 99
     assert r["name"] == "Minimal"
     assert r["team"] is None
     assert r["team_id"] is None
@@ -212,7 +212,7 @@ def test_judge_list_minimal_row():
 
 def test_judge_list_coach_true():
     """Judge with (Coach) indicator should have is_coach=True."""
-    html = _wrap_table(_make_judge_row(judgeid=102, name="Donna Moss", coach=True))
+    html = _wrap_table(_make_judge_row(judge_id=102, name="Donna Moss", coach=True))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_coach"] is True
     assert r["name"] == DONNA_MOSS
@@ -220,7 +220,7 @@ def test_judge_list_coach_true():
 
 def test_judge_list_coach_false():
     """Judge without (Coach) indicator should have is_coach=False."""
-    html = _wrap_table(_make_judge_row(judgeid=50, name="Regular Judge", coach=False))
+    html = _wrap_table(_make_judge_row(judge_id=50, name="Regular Judge", coach=False))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_coach"] is False
     assert r["name"] == "Regular Judge"
@@ -229,9 +229,9 @@ def test_judge_list_coach_false():
 def test_judge_list_mixed_coach_and_non_coach():
     """Table with both coach and non-coach judges."""
     html = _wrap_table(
-        _make_judge_row(judgeid=1, name="Coach Person", coach=True),
-        _make_judge_row(judgeid=2, name="Volunteer Judge", coach=False),
-        _make_judge_row(judgeid=3, name="Another Coach", coach=True),
+        _make_judge_row(judge_id=1, name="Coach Person", coach=True),
+        _make_judge_row(judge_id=2, name="Volunteer Judge", coach=False),
+        _make_judge_row(judge_id=3, name="Another Coach", coach=True),
     )
     records = parse_judge_list_from_html(html)
     assert len(records) == 3
@@ -241,10 +241,10 @@ def test_judge_list_mixed_coach_and_non_coach():
 
 
 def test_judge_list_backward_compat():
-    """Existing judgeid/name fields must remain present and correct."""
-    html = _wrap_table(_make_judge_row(judgeid=33, name="Old Name"))
+    """Existing judge_id/name fields must remain present and correct."""
+    html = _wrap_table(_make_judge_row(judge_id=33, name="Old Name"))
     r = parse_judge_list_from_html(html)[0]
-    assert "judgeid" in r and r["judgeid"] == 33
+    assert "judge_id" in r and r["judge_id"] == 33
     assert "name" in r and r["name"] == "Old Name"
 
 
@@ -259,13 +259,13 @@ def test_judge_list_no_table():
 
 def test_judge_list_multiple_rows():
     html = _wrap_table(
-        _make_judge_row(judgeid=1, name="A", active_val="0"),
-        _make_judge_row(judgeid=2, name="B", active_val="1"),
+        _make_judge_row(judge_id=1, name="A", active_val="0"),
+        _make_judge_row(judge_id=2, name="B", active_val="1"),
     )
     records = parse_judge_list_from_html(html)
     assert len(records) == 2
-    assert records[0]["judgeid"] == 1 and records[0]["is_active"] is True
-    assert records[1]["judgeid"] == 2 and records[1]["is_active"] is False
+    assert records[0]["judge_id"] == 1 and records[0]["is_active"] is True
+    assert records[1]["judge_id"] == 2 and records[1]["is_active"] is False
 
 
 def test_judge_list_blocks_multiple():

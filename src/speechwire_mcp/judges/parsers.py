@@ -31,7 +31,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
     Returns
     -------
     list[dict]
-        Each record contains: judgeid, name, team, team_id, is_coach,
+        Each record contains: judge_id, name, team, team_id, is_coach,
         is_active, is_clean, is_priority, unavailability, blocks.
     """
     soup = make_soup(html)
@@ -49,16 +49,16 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
         if not tds:
             continue
 
-        # Col 0: Name + judgeid + optional (Coach) indicator
+        # Col 0: Name + judge_id + optional (Coach) indicator
         name = None
-        judgeid: Optional[int] = None
+        judge_id: Optional[int] = None
         is_coach = False
         name_td = td_safe(tds, 0)
         if name_td:
             name_link = name_td.find("a")
             if name_link:
                 name = name_link.get_text(strip=True) or None
-                judgeid = extract_int_query_param(name_link, "judgeid")
+                judge_id = extract_int_query_param(name_link, "judgeid")
             td_text = name_td.get_text(" ", strip=True)
             if "(Coach)" in td_text:
                 is_coach = True
@@ -102,7 +102,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
                 blocks = [b.strip() for b in raw.split("<br/>") if b.strip()]
 
         records.append({
-            "judgeid": judgeid,
+            "judge_id": judge_id,
             "name": name,
             "team": team,
             "team_id": team_id,

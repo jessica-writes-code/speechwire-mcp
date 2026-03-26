@@ -256,7 +256,7 @@ def speechwire_list_judges() -> list[dict]:
     """List all judges registered for the tournament with roster details.
 
     Returns a list of records, each containing:
-    - judgeid: int — numeric judge identifier
+    - judge_id: int — numeric judge identifier
     - name: str — judge's full name
     - team: str | None — school or team name
     - team_id: int | None — numeric team identifier
@@ -284,12 +284,12 @@ def speechwire_get_judge_contact(judge_id: int) -> dict:
     judge_id : int
         Numeric judge identifier from speechwire_list_judges.
 
-    Returns a dict with judgeid, email, and phone fields.
+    Returns a dict with judge_id, email, and phone fields.
     """
     return _safe_tool_call(
         lambda: get_judge_contact(judge_id, _get_client()),
         f"Failed to get contact for judge {judge_id}",
-        default={"error": "contact_fetch_failed", "judgeid": judge_id},
+        default={"error": "contact_fetch_failed", "judge_id": judge_id},
         require_tournament=True,
     )
 
@@ -325,12 +325,12 @@ def speechwire_get_judge_school(judge_id: int) -> dict:
     judge_id : int
         Numeric judge identifier from speechwire_list_judges.
 
-    Returns a dict with judgeid, school name, and team_id.
+    Returns a dict with judge_id, school name, and team_id.
     """
     return _safe_tool_call(
         lambda: get_judge_school(judge_id, _get_client()),
         f"Failed to get school for judge {judge_id}",
-        default={"error": "school_fetch_failed", "judgeid": judge_id},
+        default={"error": "school_fetch_failed", "judge_id": judge_id},
         require_tournament=True,
     )
 
