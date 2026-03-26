@@ -37,7 +37,7 @@ dev = [
 ]
 
 [project.scripts]
-speechwire-mcp = "speechwiremcp.server:main"
+speechwire-mcp = "speechwire_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/jessicamoore/SpeechWireMCP"
@@ -45,7 +45,7 @@ Repository = "https://github.com/jessicamoore/SpeechWireMCP"
 Issues = "https://github.com/jessicamoore/SpeechWireMCP/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/speechwiremcp"]
+packages = ["src/speechwire_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
