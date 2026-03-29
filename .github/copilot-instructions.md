@@ -21,19 +21,40 @@ authenticated session and exposes structured data through MCP tools.
 
 ```
 src/speechwire_mcp/
-├── server.py        # FastMCP server, tool definitions, lazy client init
-├── client.py        # SpeechWireClient (4-step auth), _fetch_and_parse helper
-└── judges/
-    ├── client.py    # Judge data retrieval (list, contact, availability)
-    └── parsers.py   # HTML → structured data parsing
+├── server.py            # FastMCP server, tool definitions, lazy client init
+├── client.py            # SpeechWireClient (4-step auth), _fetch_and_parse helper
+├── parsing_helpers.py   # Shared BS4 utilities (make_soup, td_safe, extract_int_query_param)
+├── judges/
+│   ├── client.py        # Judge data retrieval (list, contact, availability, school)
+│   └── parsers.py       # Judge HTML → structured data parsing
+├── login/
+│   ├── client.py        # Account & tournament discovery after login
+│   └── parsers.py       # Account list & tournament list parsing
+├── rooms/
+│   ├── client.py        # Room list, usage grid, count retrieval
+│   └── parsers.py       # Room HTML → structured data parsing
+├── schematics/
+│   ├── client.py        # Schematic event list & round schematic retrieval
+│   └── parsers.py       # Schematic HTML → structured data parsing
+├── structure/
+│   ├── client.py        # Timeslot & grouping retrieval
+│   └── parsers.py       # Schedule/grouping HTML → structured data parsing
+└── teams/
+    ├── client.py        # Team list, entries, hybrid entries retrieval
+    └── parsers.py       # Team HTML → structured data parsing
 ```
 
 - **server.py** is the MCP entry point. Tools are thin wrappers that delegate to
-  `judges/` functions.
+  domain modules (`judges/`, `login/`, `rooms/`, `schematics/`, `structure/`,
+  `teams/`).
 - **client.py** owns all HTTP and authentication logic. The client automatically
   re-authenticates when it detects a session expiry.
-- **judges/parsers.py** contains pure functions that take HTML strings and return
-  dicts/lists — keep them side-effect free for easy testing.
+- **parsing_helpers.py** provides shared BeautifulSoup utilities used by all
+  domain parsers.
+- Each **domain module** follows the same pattern: `client.py` calls
+  `_fetch_and_parse` with a URL and parser; `parsers.py` contains pure functions
+  that take HTML strings and return dicts/lists — keep them side-effect free for
+  easy testing.
 - **`_fetch_and_parse`** is the shared pattern: fetch a page, run a parser,
   return a safe default on any failure.
 
@@ -84,8 +105,8 @@ pushing a `v*` tag.
 
 ## Adding a New MCP Tool
 
-1. Add a parser in `judges/parsers.py` (pure function, HTML → data).
-2. Add a retrieval function in `judges/client.py` using `_fetch_and_parse`.
-3. Export it from `judges/__init__.py`.
+1. Add a parser in `<domain>/parsers.py` (pure function, HTML → data).
+2. Add a retrieval function in `<domain>/client.py` using `_fetch_and_parse`.
+3. Export it from `<domain>/__init__.py`.
 4. Register the tool in `server.py` with `@mcp.tool()` and a clear docstring.
 5. Write parser tests in `tests/`.
