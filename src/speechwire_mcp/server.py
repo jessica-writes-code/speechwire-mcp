@@ -355,8 +355,7 @@ def speechwire_add_judge(
     judge_email : str
         Email address (optional, max 50 characters).
     team_id : int
-        Team/school ID. Use 0 for no team.
-        Get valid IDs from speechwire_list_teams.
+        Team/school ID (required). Get valid IDs from speechwire_list_teams.
     judge_type_id : int
         Judge type code: 0=none, 10=A, 11=B, 12=C, 13=D, 14=E.
     is_clean : bool

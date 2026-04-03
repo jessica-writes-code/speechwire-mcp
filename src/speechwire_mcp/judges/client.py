@@ -1,4 +1,5 @@
 from typing import List, Dict
+import logging
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse, _post_and_parse
 from speechwire_mcp.judges.parsers import (
@@ -8,6 +9,8 @@ from speechwire_mcp.judges.parsers import (
     parse_school_from_edit_html,
     parse_add_judge_response,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_judge_list(client: SpeechWireClient) -> List[Dict]:
@@ -160,6 +163,20 @@ def add_judge(
             "judge_id": None,
             "error": "invalid judge_type_id; must be 0, 10, 11, 12, 13, or 14",
         }
+    if not team_id:
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "team_id is required (use speechwire_list_teams to find valid IDs)",
+        }
+
+    # --- pre-fetch the add-judge form (required for server-side session state) ---
+    _ADD_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-add.php"
+    _EDIT_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-edit.php"
+    try:
+        client.session.get(_ADD_JUDGE_URL)
+    except Exception:
+        logger.warning("Failed to pre-fetch add-judge form")
 
     # --- build form data ---
     form_data: dict[str, str] = {
@@ -171,14 +188,15 @@ def add_judge(
         "judgeiscoach": "1" if is_coach else "0",
         "judgeispriority": "1" if is_priority else "0",
         "mode": "addjudge",
+        "Submit": "Create judge",
     }
     if available_slots:
         for slot in available_slots:
-            form_data[f"slotunblock[{slot}]"] = "on"
+            form_data[f"slotunblock[{slot}]"] = "1"
 
     return _post_and_parse(
         client,
-        "https://manage.speechwire.com/tabroom/judges-edit.php",
+        _EDIT_JUDGE_URL,
         form_data,
         parse_add_judge_response,
         default={"success": False, "judge_id": None, "error": "request failed"},

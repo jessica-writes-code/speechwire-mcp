@@ -275,22 +275,34 @@ def parse_add_judge_response(html: str) -> Dict:
         if text and "error" in text.lower():
             error_texts.append(text)
 
-    has_error = bool(mode_input) or bool(error_texts)
+    no_judge = bool(soup.find(string=lambda s: s and "No judge specified" in s))
+    has_error = bool(mode_input) or bool(error_texts) or no_judge
 
     # --- success signals ---
     judge_id: Optional[int] = None
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if "judgeid=" in href:
-            judge_id = extract_int_query_param(a, "judgeid")
-            if judge_id is not None:
-                break
+    success_msg = soup.find("div", class_="successmsg")
 
-    judge_table = soup.find("table", class_="dd")
+    # Extract judge_id from hidden input or links
+    judge_id_input = soup.find("input", {"name": "judgeid"})
+    if judge_id_input:
+        try:
+            judge_id = int(judge_id_input.get("value", ""))
+        except (ValueError, TypeError):
+            pass
+
+    if judge_id is None:
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if "judgeid=" in href:
+                judge_id = extract_int_query_param(a, "judgeid")
+                if judge_id is not None:
+                    break
+
     body_text = soup.get_text(" ", strip=True).lower()
     has_success = (
-        judge_id is not None
-        or judge_table is not None
+        success_msg is not None
+        or judge_id is not None
+        or "judge added" in body_text
         or "added" in body_text
         or "saved" in body_text
     )
