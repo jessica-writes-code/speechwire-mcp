@@ -265,6 +265,7 @@ def speechwire_list_judges() -> list[dict]:
     - is_active: bool — whether the judge is active
     - is_clean: bool — whether the judge is marked clean
     - is_priority: bool — whether the judge is marked priority
+    - email: str | None — judge's email address (if present on the roster page)
     - unavailability: str | None — unavailability summary text
     - blocks: list[str] — event/team blocks (e.g. "GROUPING: Varsity Policy Debate")
     """
