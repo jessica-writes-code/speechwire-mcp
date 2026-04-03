@@ -64,12 +64,16 @@ def _extract_date_from_name(name: str) -> str | None:
 
 
 def parse_tournament_list_html(html: str) -> list[dict]:
-    """Parse the ``c-circuit-tournaments.php`` page into a list of tournaments.
+    """Parse ``c-circuit-tournaments.php`` into current and past-season tournaments.
+
+    Returns all tournaments from both the current-season form
+    (``formaddexisting``) and the historical form (``formold``), each tagged
+    with a ``season`` field.
 
     Uses three strategies in priority order:
 
-    1. ``<select name="tournid">`` inside a form (real SpeechWire HTML).
-       Only the **first** such form is processed (current-season tournaments).
+    1. ``<select name="tournid">`` inside forms (real SpeechWire HTML).
+       Processes **all** matching forms, not just the first.
     2. Anchor tags with ``tournid=`` & ``circuitid=`` query params in href.
     3. Forms with hidden ``<input name="tournid">`` fields.
 
@@ -82,24 +86,41 @@ def parse_tournament_list_html(html: str) -> list[dict]:
     -------
     list[dict]
         Each dict has ``tournament_id`` (int), ``circuit_id`` (int | None),
-        ``name`` (str), and ``date`` (str | None).
+        ``name`` (str), ``date`` (str | None), and ``season`` (str, either
+        ``"current"`` or ``"past"``).
     """
     soup = make_soup(html)
     tournaments: list[dict] = []
     seen: set[int] = set()
 
-    # Strategy 1: <select name="tournid"> inside a form (real SpeechWire HTML)
-    select = soup.find("select", {"name": "tournid"})
-    if select:
-        form = select.find_parent("form")
+    # Strategy 1: <select name="tournid"> inside forms (real SpeechWire HTML).
+    # Collect all forms containing a tournid select, processing
+    # formaddexisting (current) before formold (past) so current wins dedup.
+    all_forms = soup.find_all("form")
+    select_forms: list[tuple] = []  # (form element, season str)
+    for form in all_forms:
+        select = form.find("select", {"name": "tournid"})
+        if not select:
+            continue
+        form_name = (form.get("name") or "").strip()
+        if form_name == "formold":
+            season = "past"
+        else:
+            season = "current"
+        select_forms.append((form, season))
+
+    # Sort so "current" forms come first (current < past alphabetically)
+    select_forms.sort(key=lambda t: t[1])
+
+    for form, season in select_forms:
+        select = form.find("select", {"name": "tournid"})
         circuit_id: int | None = None
-        if form:
-            circuit_input = form.find("input", {"name": "circuitid"})
-            if circuit_input:
-                try:
-                    circuit_id = int(circuit_input.get("value", ""))
-                except (ValueError, TypeError):
-                    pass
+        circuit_input = form.find("input", {"name": "circuitid"})
+        if circuit_input:
+            try:
+                circuit_id = int(circuit_input.get("value", ""))
+            except (ValueError, TypeError):
+                pass
 
         for option in select.find_all("option"):
             val = (option.get("value") or "").strip()
@@ -116,6 +137,7 @@ def parse_tournament_list_html(html: str) -> list[dict]:
                 "circuit_id": circuit_id,
                 "name": name,
                 "date": date,
+                "season": season,
             })
 
     # Strategy 2: anchor tags with tournid & circuitid in the href
@@ -135,6 +157,7 @@ def parse_tournament_list_html(html: str) -> list[dict]:
                 "circuit_id": cid,
                 "name": name,
                 "date": date,
+                "season": "current",
             })
 
     # Strategy 3: forms with hidden inputs
@@ -160,6 +183,7 @@ def parse_tournament_list_html(html: str) -> list[dict]:
                 "circuit_id": cid,
                 "name": label,
                 "date": None,
+                "season": "current",
             })
 
     return tournaments

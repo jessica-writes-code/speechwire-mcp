@@ -202,9 +202,10 @@ def speechwire_select_user_account(account_id: int) -> dict:
 
 @mcp.tool()
 def speechwire_list_user_tournaments() -> list[dict]:
-    """List tournaments available for the selected account.
+    """List all tournaments (current and past seasons) for the selected account.
 
-    Returns a list with: tournament_id (int), circuit_id (int), name (str).
+    Returns a list with: tournament_id (int), circuit_id (int | None),
+    name (str), date (str | None), season (str: "current" or "past").
     Call speechwire_select_user_tournament to choose one.
     """
     return _safe_tool_call(
