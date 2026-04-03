@@ -99,9 +99,6 @@ def get_judge_school(judge_id: int, client: SpeechWireClient) -> Dict:
     )
 
 
-_VALID_JUDGE_TYPE_IDS = {0, 10, 11, 12, 13, 14}
-
-
 def add_judge(
     client: SpeechWireClient,
     judge_name: str,
@@ -120,13 +117,14 @@ def add_judge(
     client : SpeechWireClient
         Authenticated client with a tournament selected.
     judge_name : str
-        Judge's full name (required, max 50 characters).
+        Judge's full name (required).
     judge_email : str
-        Email address (optional, max 50 characters).
+        Email address (optional).
     team_id : int
-        Team/school ID. Use 0 for no team.
+        Team/school ID (required). Get valid IDs from speechwire_list_teams.
     judge_type_id : int
-        Judge type: 0=none, 10=A, 11=B, 12=C, 13=D, 14=E.
+        Judge type code. Values are tournament-specific; check the
+        tournament's add-judge page for available options.
     is_clean : bool
         Clean/neutral judge flag.
     is_coach : bool
@@ -145,24 +143,6 @@ def add_judge(
     # --- input validation ---
     if not judge_name.strip():
         return {"success": False, "judge_id": None, "error": "judge_name is required"}
-    if len(judge_name.strip()) > 50:
-        return {
-            "success": False,
-            "judge_id": None,
-            "error": "judge_name must be 50 characters or fewer",
-        }
-    if len(judge_email.strip()) > 50:
-        return {
-            "success": False,
-            "judge_id": None,
-            "error": "judge_email must be 50 characters or fewer",
-        }
-    if judge_type_id not in _VALID_JUDGE_TYPE_IDS:
-        return {
-            "success": False,
-            "judge_id": None,
-            "error": "invalid judge_type_id; must be 0, 10, 11, 12, 13, or 14",
-        }
     if not team_id:
         return {
             "success": False,

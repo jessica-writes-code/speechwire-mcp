@@ -351,13 +351,14 @@ def speechwire_add_judge(
     Parameters
     ----------
     judge_name : str
-        Judge's full name (required, max 50 characters).
+        Judge's full name (required).
     judge_email : str
-        Email address (optional, max 50 characters).
+        Email address (optional).
     team_id : int
         Team/school ID (required). Get valid IDs from speechwire_list_teams.
     judge_type_id : int
-        Judge type code: 0=none, 10=A, 11=B, 12=C, 13=D, 14=E.
+        Judge type code. Values are tournament-specific; check the
+        tournament's add-judge page for available options.
     is_clean : bool
         Whether the judge is a clean/neutral judge.
     is_coach : bool
