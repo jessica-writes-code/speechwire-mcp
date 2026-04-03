@@ -126,8 +126,7 @@ class SpeechWireClient:
         """
         try:
             resp = self.session.get(
-                "https://www.speechwire.com/c-account-select.php"
-                f"?selectaccountid={account_id}"
+                f"https://www.speechwire.com/c-account-select.php?selectaccountid={account_id}"
             )
             resp.raise_for_status()
             self.account_id = str(account_id)
@@ -136,9 +135,7 @@ class SpeechWireClient:
         except RequestException as e:
             raise SpeechWireAuthError(f"Account selection failed: {e}") from e
 
-    def select_tournament(
-        self, tournament_id: str | int, circuit_id: str | int
-    ) -> None:
+    def select_tournament(self, tournament_id: str | int, circuit_id: str | int) -> None:
         """Phase C — select a tournament and activate the session.
 
         Parameters
@@ -165,14 +162,10 @@ class SpeechWireClient:
             soup = BeautifulSoup(resp.text, "html.parser")
             link = soup.find(
                 "a",
-                href=lambda x: x
-                and "njc=" in x
-                and f"tournid={tournament_id}" in x,
+                href=lambda x: x and "njc=" in x and f"tournid={tournament_id}" in x,
             )
             if not link:
-                raise SpeechWireAuthError(
-                    "Could not find tournament activation link"
-                )
+                raise SpeechWireAuthError("Could not find tournament activation link")
 
             self.session.get(
                 link["href"],
@@ -187,9 +180,7 @@ class SpeechWireClient:
                 circuit_id,
             )
         except RequestException as e:
-            raise SpeechWireAuthError(
-                f"Tournament selection failed: {e}"
-            ) from e
+            raise SpeechWireAuthError(f"Tournament selection failed: {e}") from e
 
     # ------------------------------------------------------------------
     # Discovery helpers
@@ -205,9 +196,7 @@ class SpeechWireClient:
         """
         from speechwire_mcp.login.parsers import parse_account_list_html
 
-        resp = self.get(
-            "https://www.speechwire.com/c-account-select.php"
-        )
+        resp = self.get("https://www.speechwire.com/c-account-select.php")
         return parse_account_list_html(resp.text)
 
     def discover_tournaments(self) -> list[dict]:
@@ -221,9 +210,7 @@ class SpeechWireClient:
         """
         from speechwire_mcp.login.parsers import parse_tournament_list_html
 
-        resp = self.get(
-            "https://www.speechwire.com/c-circuit-tournaments.php"
-        )
+        resp = self.get("https://www.speechwire.com/c-circuit-tournaments.php")
         return parse_tournament_list_html(resp.text)
 
     # ------------------------------------------------------------------
@@ -237,14 +224,13 @@ class SpeechWireClient:
             self.select_account(accounts[0]["account_id"])
             logger.info("Auto-selected sole account: %s", accounts[0].get("name"))
         elif len(accounts) == 0:
-            raise SpeechWireAuthError(
-                "No accounts found for this login. Verify your credentials."
-            )
+            raise SpeechWireAuthError("No accounts found for this login. Verify your credentials.")
         else:
             raise SpeechWireSelectionRequired(
                 "Multiple accounts available — please select one.",
                 options=accounts,
             )
+
 
     # ------------------------------------------------------------------
     # Convenience wrappers
@@ -290,12 +276,9 @@ class SpeechWireClient:
         - "Select the tournament" text, but only when the URL is NOT the
           tournament discovery page where that text appears legitimately
         """
-        if "type=\"password\"" in resp.text or "type='password'" in resp.text:
+        if 'type="password"' in resp.text or "type='password'" in resp.text:
             return True
-        if (
-            "Select the tournament" in resp.text
-            and "c-circuit-tournaments.php" not in resp.url
-        ):
+        if "Select the tournament" in resp.text and "c-circuit-tournaments.php" not in resp.url:
             return True
         return False
 
@@ -315,6 +298,25 @@ class SpeechWireClient:
             finally:
                 self._reauthenticating = False
             resp = self.session.get(url)
+        return resp
+
+    def post(self, url: str, data: dict) -> requests.Response:
+        """POST form data with session-expiry handling.
+
+        If the response looks like an expired session, re-authenticates
+        and retries the POST once.
+
+        Parameters
+        ----------
+        url : str
+            Target URL on manage.speechwire.com.
+        data : dict
+            Form data to submit.
+        """
+        resp = self.session.post(url, data=data)
+        if self._looks_like_expired_session(resp):
+            self._authenticate()
+            resp = self.session.post(url, data=data)
         return resp
 
 
@@ -355,4 +357,47 @@ def _fetch_and_parse(
         return parser(resp.text)
     except Exception:
         logger.exception("Failed to parse %s", context)
+        return default
+
+
+def _post_and_parse(
+    client: SpeechWireClient | None,
+    url: str,
+    data: dict,
+    parser: Callable[[str], T],
+    default: T,
+    context: str = "",
+) -> T:
+    """POST form data and parse the response, returning *default* on failure.
+
+    Parameters
+    ----------
+    client : SpeechWireClient | None
+        The authenticated client instance.
+    url : str
+        URL to POST to.
+    data : dict
+        Form data to submit.
+    parser : Callable[[str], T]
+        Pure function that converts HTML text into the desired data shape.
+    default : T
+        Value returned when posting or parsing fails.
+    context : str
+        Human-readable label for log messages.
+    """
+    if not client:
+        logger.error("No SpeechWire client provided")
+        return default
+
+    try:
+        resp = client.post(url, data=data)
+        resp.raise_for_status()
+    except Exception:
+        logger.exception("Failed to post %s", context)
+        return default
+
+    try:
+        return parser(resp.text)
+    except Exception:
+        logger.exception("Failed to parse %s response", context)
         return default

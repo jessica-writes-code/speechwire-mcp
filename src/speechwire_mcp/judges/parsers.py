@@ -101,18 +101,20 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
             if raw and raw != "&nbsp;":
                 blocks = [b.strip() for b in raw.split("<br/>") if b.strip()]
 
-        records.append({
-            "judge_id": judge_id,
-            "name": name,
-            "team": team,
-            "team_id": team_id,
-            "is_coach": is_coach,
-            "is_active": is_active,
-            "is_clean": is_clean,
-            "is_priority": is_priority,
-            "unavailability": unavailability,
-            "blocks": blocks,
-        })
+        records.append(
+            {
+                "judge_id": judge_id,
+                "name": name,
+                "team": team,
+                "team_id": team_id,
+                "is_coach": is_coach,
+                "is_active": is_active,
+                "is_clean": is_clean,
+                "is_priority": is_priority,
+                "unavailability": unavailability,
+                "blocks": blocks,
+            }
+        )
 
     return records
 
@@ -231,9 +233,7 @@ def parse_school_from_edit_html(html: str) -> Dict:
     """
     soup = make_soup(html)
 
-    select = soup.find("select", {"id": "teamid"}) or soup.find(
-        "select", {"name": "teamid"}
-    )
+    select = soup.find("select", {"id": "teamid"}) or soup.find("select", {"name": "teamid"})
     if not select:
         return {"school": None, "team_id": None}
 
@@ -246,3 +246,65 @@ def parse_school_from_edit_html(html: str) -> Dict:
     team_id = int(raw_val) if raw_val and str(raw_val).isdigit() else None
 
     return {"school": school, "team_id": team_id}
+
+
+def parse_add_judge_response(html: str) -> Dict:
+    """Parse the response from a judge-creation POST.
+
+    Determines whether the judge was successfully created by looking for
+    success indicators (judge links, list tables) and error indicators
+    (form re-rendered, error text).
+
+    Parameters
+    ----------
+    html : str
+        Raw HTML response from ``judges-edit.php``.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    soup = make_soup(html)
+
+    # --- error signals ---
+    mode_input = soup.find("input", {"name": "mode", "value": "addjudge"})
+    error_texts: List[str] = []
+    for tag in soup.find_all(["p", "div"]):
+        text = tag.get_text(" ", strip=True)
+        if text and "error" in text.lower():
+            error_texts.append(text)
+
+    has_error = bool(mode_input) or bool(error_texts)
+
+    # --- success signals ---
+    judge_id: Optional[int] = None
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if "judgeid=" in href:
+            judge_id = extract_int_query_param(a, "judgeid")
+            if judge_id is not None:
+                break
+
+    judge_table = soup.find("table", class_="dd")
+    body_text = soup.get_text(" ", strip=True).lower()
+    has_success = (
+        judge_id is not None
+        or judge_table is not None
+        or "added" in body_text
+        or "saved" in body_text
+    )
+
+    # --- priority: error overrides success ---
+    if has_error:
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": error_texts[0] if error_texts else "form re-rendered (add failed)",
+        }
+
+    if has_success:
+        return {"success": True, "judge_id": judge_id, "error": None}
+
+    # ambiguous 200 — assume success
+    return {"success": True, "judge_id": None, "error": None}
