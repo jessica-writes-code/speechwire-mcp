@@ -15,9 +15,7 @@ try:
         parse_tournament_list_html,
     )
 except ImportError:
-    pytestmark = pytest.mark.skip(
-        reason="speechwire_mcp.login.parsers not implemented yet"
-    )
+    pytestmark = pytest.mark.skip(reason="speechwire_mcp.login.parsers not implemented yet")
     parse_account_list_html = None  # type: ignore[assignment]
     parse_tournament_list_html = None  # type: ignore[assignment]
 
@@ -266,6 +264,7 @@ REAL_SPEECHWIRE_DATE_RANGE_HTML = """<html><body>
 # Tests — parse_account_list_html
 # ---------------------------------------------------------------------------
 
+
 class TestParseAccountListHtml:
     def test_single_account(self):
         result = parse_account_list_html(SINGLE_ACCOUNT_HTML)
@@ -316,6 +315,7 @@ class TestParseAccountListHtml:
 # ---------------------------------------------------------------------------
 # Tests — parse_tournament_list_html
 # ---------------------------------------------------------------------------
+
 
 class TestParseTournamentListHtml:
     def test_single_tournament(self):
@@ -369,6 +369,7 @@ class TestParseTournamentListHtml:
         assert "tournament_id" in rec
         assert "circuit_id" in rec
         assert "name" in rec
+        assert "season" in rec
 
     def test_date_field_present_when_available(self):
         result = parse_tournament_list_html(SINGLE_TOURNAMENT_HTML)
@@ -380,17 +381,12 @@ class TestParseTournamentListHtml:
 class TestParseTournamentListSelectStrategy:
     """Tests for Strategy 1: <select name="tournid"> (real SpeechWire HTML)."""
 
-    def test_real_html_extracts_current_season_only(self):
+    def test_real_html_extracts_all_seasons(self):
         result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
-        # Should only get 3 tournaments from formaddexisting, not the 2 from formold
-        assert len(result) == 3
-        tourn_ids = [r["tournament_id"] for r in result]
-        assert 20022 in tourn_ids
-        assert 20074 in tourn_ids
-        assert 21289 in tourn_ids
-        # Historical tournaments should NOT appear
-        assert 10001 not in tourn_ids
-        assert 10002 not in tourn_ids
+        # 3 current + 2 past tournaments
+        assert len(result) == 5
+        tourn_ids = {r["tournament_id"] for r in result}
+        assert tourn_ids == {20022, 20074, 21289, 10001, 10002}
 
     def test_real_html_extracts_circuit_id(self):
         result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
@@ -440,6 +436,7 @@ class TestParseTournamentListSelectStrategy:
             assert "circuit_id" in rec
             assert "name" in rec
             assert "date" in rec
+            assert "season" in rec
 
 
 # ---------------------------------------------------------------------------
@@ -553,6 +550,7 @@ DATE_RANGE_OPTION_HTML = """<!DOCTYPE html>
 # Tests — parse_tournament_list_html (select-dropdown strategy)
 # ---------------------------------------------------------------------------
 
+
 class TestParseTournamentSelectDropdown:
     """Tests for the real SpeechWire HTML format using <select> dropdowns."""
 
@@ -578,19 +576,15 @@ class TestParseTournamentSelectDropdown:
         assert "Oct" in by_id[20022]["date"]
         assert "2025" in by_id[20022]["date"]
 
-    def test_parse_tournaments_skips_past_seasons(self):
-        """Only the first <select name='tournid'> form (current season) is used."""
+    def test_parse_tournaments_includes_all_seasons(self):
+        """Both formaddexisting (current) and formold (past) tournaments returned."""
         result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
         assert isinstance(result, list)
-        # Only 2 tournaments from the first (current) form
-        assert len(result) == 2
+        # 2 current + 3 past
+        assert len(result) == 5
 
         ids = {r["tournament_id"] for r in result}
-        assert ids == {20022, 20074}
-        # Past-season IDs should NOT be present
-        assert 18001 not in ids
-        assert 18002 not in ids
-        assert 18003 not in ids
+        assert ids == {20022, 20074, 18001, 18002, 18003}
 
     def test_parse_tournaments_no_date_in_name(self):
         """Option text with no parenthesized date → date should be None."""
@@ -625,3 +619,164 @@ class TestParseTournamentSelectDropdown:
 
         assert by_id[5002]["date"] is not None
         assert "Mar" in by_id[5002]["date"]
+
+
+# ---------------------------------------------------------------------------
+# HTML fixtures — historical tournament support
+# ---------------------------------------------------------------------------
+
+PAST_ONLY_HTML = """<!DOCTYPE html>
+<html><body>
+  <form action="c-circuit-tournaments.php" method="post"
+        name="formold" id="formold">
+    <select id='tournidold' name='tournid'>
+      <option value='4361'>Bartlet Middle Scrimmage (Dec. 12, 2015)</option>
+      <option value='4500'>Rosslyn Spring Classic (Mar. 5, 2016)</option>
+    </select>
+    <input name='circuitid' type="hidden" value="25" />
+  </form>
+</body></html>
+"""
+
+DUPLICATE_ACROSS_FORMS_HTML = """<!DOCTYPE html>
+<html><body>
+  <form name="formaddexisting">
+    <select name='tournid'>
+      <option value='20022'>Bartlet Invitational (Oct. 25, 2025)</option>
+    </select>
+    <input name='circuitid' type="hidden" value="25" />
+  </form>
+  <form name="formold">
+    <select name='tournid'>
+      <option value='20022'>Bartlet Invitational Archived (Oct. 25, 2024)</option>
+    </select>
+    <input name='circuitid' type="hidden" value="25" />
+  </form>
+</body></html>
+"""
+
+PAST_MISSING_CIRCUIT_HTML = """<!DOCTYPE html>
+<html><body>
+  <form name="formold">
+    <select name='tournid'>
+      <option value='5555'>Kennison Throwback (Jan. 15, 2018)</option>
+    </select>
+  </form>
+</body></html>
+"""
+
+PAST_DATE_RANGE_HTML = """<!DOCTYPE html>
+<html><body>
+  <form name="formold">
+    <select name='tournid'>
+      <option value='4988'>Rosslyn Season Opener (Sep. 16-17, 2016)</option>
+    </select>
+    <input name='circuitid' type="hidden" value="25" />
+  </form>
+</body></html>
+"""
+
+
+# ---------------------------------------------------------------------------
+# Tests — historical tournament behaviour
+# ---------------------------------------------------------------------------
+
+
+class TestParseTournamentListHistorical:
+    """Tests for historical (past-season) tournament parsing."""
+
+    def test_both_seasons_returned(self):
+        """CURRENT_AND_PAST_SEASONS_HTML returns 5 tournaments (2 current + 3 past)."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        assert len(result) == 5
+
+    def test_current_season_tagged(self):
+        """Tournaments from formaddexisting are tagged season='current'."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        current = [r for r in result if r["tournament_id"] in {20022, 20074}]
+        assert len(current) == 2
+        for rec in current:
+            assert rec["season"] == "current"
+
+    def test_past_season_tagged(self):
+        """Tournaments from formold are tagged season='past'."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        past = [r for r in result if r["tournament_id"] in {18001, 18002, 18003}]
+        assert len(past) == 3
+        for rec in past:
+            assert rec["season"] == "past"
+
+    def test_circuit_id_extracted_for_both_seasons(self):
+        """All records from both forms have circuit_id == 25."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        for rec in result:
+            assert rec["circuit_id"] == 25
+
+    def test_dates_extracted_for_both_seasons(self):
+        """Dates are present for both current and past tournaments."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        for rec in result:
+            assert rec["date"] is not None
+            assert isinstance(rec["date"], str)
+            assert len(rec["date"]) > 0
+
+    def test_current_only_page(self):
+        """SELECT_DROPDOWN_HTML (no formold): 3 tournaments, all season='current'."""
+        result = parse_tournament_list_html(SELECT_DROPDOWN_HTML)
+        assert len(result) == 3
+        for rec in result:
+            assert rec["season"] == "current"
+
+    def test_past_only_page(self):
+        """PAST_ONLY_HTML: 2 tournaments, all season='past'."""
+        result = parse_tournament_list_html(PAST_ONLY_HTML)
+        assert len(result) == 2
+        ids = {r["tournament_id"] for r in result}
+        assert ids == {4361, 4500}
+        for rec in result:
+            assert rec["season"] == "past"
+
+    def test_empty_page(self):
+        """NO_SELECT_PLAIN_PAGE_HTML: returns empty list."""
+        result = parse_tournament_list_html(NO_SELECT_PLAIN_PAGE_HTML)
+        assert result == []
+
+    def test_empty_selects(self):
+        """EMPTY_SELECT_HTML: returns empty list."""
+        result = parse_tournament_list_html(EMPTY_SELECT_HTML)
+        assert result == []
+
+    def test_all_records_have_season_key(self):
+        """Every record from CURRENT_AND_PAST_SEASONS_HTML has a 'season' key."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        for rec in result:
+            assert "season" in rec
+
+    def test_deduplication_across_forms(self):
+        """Same tournament_id in both forms appears once, tagged 'current'."""
+        result = parse_tournament_list_html(DUPLICATE_ACROSS_FORMS_HTML)
+        assert len(result) == 1
+        assert result[0]["tournament_id"] == 20022
+        assert result[0]["season"] == "current"
+
+    def test_past_missing_circuit_id(self):
+        """Past form with no circuitid hidden input -> circuit_id is None."""
+        result = parse_tournament_list_html(PAST_MISSING_CIRCUIT_HTML)
+        assert len(result) == 1
+        assert result[0]["tournament_id"] == 5555
+        assert result[0]["circuit_id"] is None
+        assert result[0]["season"] == "past"
+
+    def test_past_date_range(self):
+        """Date range like 'Sep. 16-17, 2016' extracted correctly from past form."""
+        result = parse_tournament_list_html(PAST_DATE_RANGE_HTML)
+        assert len(result) == 1
+        assert result[0]["date"] == "Sep. 16-17, 2016"
+        assert result[0]["season"] == "past"
+
+    def test_season_values_are_valid(self):
+        """All season values are either 'current' or 'past'."""
+        result = parse_tournament_list_html(CURRENT_AND_PAST_SEASONS_HTML)
+        valid_seasons = {"current", "past"}
+        for rec in result:
+            assert rec["season"] in valid_seasons
