@@ -1,5 +1,11 @@
+import pytest
+
 from fake_data import (
-    DONNA_MOSS, MANCHESTER_PREP, ROSSLYN_ACADEMY, POTOMAC_ACADEMY, CHESAPEAKE_PREP,
+    DONNA_MOSS,
+    MANCHESTER_PREP,
+    ROSSLYN_ACADEMY,
+    POTOMAC_ACADEMY,
+    CHESAPEAKE_PREP,
 )
 from speechwire_mcp.judges.parsers import (
     parse_judge_edit_contact_html,
@@ -65,6 +71,7 @@ def test_parse_availability_basic():
 # Judge List (enriched) Tests
 # ---------------------------------------------------------------------------
 
+
 def _make_judge_row(
     judge_id=1,
     name="Test Judge",
@@ -81,12 +88,10 @@ def _make_judge_row(
     """Build one <tr> of judge dashboard HTML."""
     coach_suffix = " (Coach)" if coach else ""
     team_cell = (
-        f"<td><a href='teams-judges.php?teamid={teamid}'>{team}</a></td>"
-        if team else "<td></td>"
+        f"<td><a href='teams-judges.php?teamid={teamid}'>{team}</a></td>" if team else "<td></td>"
     )
     email_cell = (
-        f"<td>{email} <b><font color='green'>LINKED</font></b></td>"
-        if email else "<td>&nbsp;</td>"
+        f"<td>{email} <b><font color='green'>LINKED</font></b></td>" if email else "<td>&nbsp;</td>"
     )
     unavail_cell = f"<td>{unavail}</td>" if unavail else "<td></td>"
     blocks_html = "<br/>".join(blocks) if blocks else ""
@@ -124,12 +129,20 @@ def _wrap_table(*rows):
 
 
 def test_judge_list_happy_path():
-    html = _wrap_table(_make_judge_row(
-        judge_id=42, name="Jane Doe", team="Chesapeake Prep", teamid=7,
-        active_val="0", clean_val="1", priority_val="1",
-        email="jane@example.com", unavail="Sat., 8:00 AM-5:00 PM",
-        blocks=["GROUPING: Varsity Policy Debate", "GROUPING: JV Policy Debate"],
-    ))
+    html = _wrap_table(
+        _make_judge_row(
+            judge_id=42,
+            name="Jane Doe",
+            team="Chesapeake Prep",
+            teamid=7,
+            active_val="0",
+            clean_val="1",
+            priority_val="1",
+            email="jane@example.com",
+            unavail="Sat., 8:00 AM-5:00 PM",
+            blocks=["GROUPING: Varsity Policy Debate", "GROUPING: JV Policy Debate"],
+        )
+    )
     records = parse_judge_list_from_html(html)
     assert len(records) == 1
     r = records[0]
@@ -269,9 +282,11 @@ def test_judge_list_multiple_rows():
 
 
 def test_judge_list_blocks_multiple():
-    html = _wrap_table(_make_judge_row(
-        blocks=["GROUPING: Varsity Lincoln-Douglas", "GROUPING: Varsity Policy Debate"],
-    ))
+    html = _wrap_table(
+        _make_judge_row(
+            blocks=["GROUPING: Varsity Lincoln-Douglas", "GROUPING: Varsity Policy Debate"],
+        )
+    )
     r = parse_judge_list_from_html(html)[0]
     assert r["blocks"] == ["GROUPING: Varsity Lincoln-Douglas", "GROUPING: Varsity Policy Debate"]
 
@@ -391,3 +406,113 @@ def test_parse_school_non_numeric_value():
     result = parse_school_from_edit_html(html)
     assert result["school"] == "Some School"
     assert result["team_id"] is None
+
+
+# ---------------------------------------------------------------------------
+# Add-judge response parser tests
+# ---------------------------------------------------------------------------
+
+
+def _import_parse_add_judge_response():
+    try:
+        from speechwire_mcp.judges.parsers import parse_add_judge_response
+
+        return parse_add_judge_response
+    except ImportError:
+        pytest.skip("parse_add_judge_response not implemented yet")
+
+
+ADD_JUDGE_SUCCESS_WITH_ID_HTML = """<!DOCTYPE html>
+<html><body>
+  <p class='pagetitle'>Judge dashboard</p>
+  <table class='dd'>
+    <tr class='tableheader'><td>Name</td><td>Team</td></tr>
+    <tr>
+      <td><a href='view-judge.php?judgeid=12345'>Jed Bartlet</a></td>
+      <td>Manchester Prep</td>
+    </tr>
+  </table>
+</body></html>
+"""
+
+ADD_JUDGE_SUCCESS_NO_ID_HTML = """<!DOCTYPE html>
+<html><body>
+  <p>Judge successfully added to the tournament.</p>
+</body></html>
+"""
+
+ADD_JUDGE_ERROR_HTML = """<!DOCTYPE html>
+<html><body>
+  <p class='pagetitle'>Add a judge</p>
+  <p style='color:red;'>Error: Judge name is required</p>
+  <form id="form1" name="form1" method="post" action="judges-edit.php">
+    <input name='mode' type='hidden' value='addjudge' />
+  </form>
+</body></html>
+"""
+
+ADD_JUDGE_FORM_RERENDERED_HTML = """<!DOCTYPE html>
+<html><body>
+  <p class='pagetitle'>Add a judge</p>
+  <form id="form1" name="form1" method="post" action="judges-edit.php">
+    <p>Judge name: <input type='text' name='judgename' value='' /></p>
+    <input name='mode' type='hidden' value='addjudge' />
+  </form>
+</body></html>
+"""
+
+ADD_JUDGE_JUDGE_LIST_HTML = """<!DOCTYPE html>
+<html><body>
+  <p class='pagetitle'>Judge dashboard</p>
+  <table class='dd'>
+    <tr class='tableheader'><td>Name</td><td>Team</td></tr>
+    <tr>
+      <td><a href='view-judge.php?judgeid=555'>Leo McGarry</a></td>
+      <td>Rosslyn Academy</td>
+    </tr>
+    <tr>
+      <td><a href='view-judge.php?judgeid=556'>Josh Lyman</a></td>
+      <td>Potomac Academy</td>
+    </tr>
+  </table>
+</body></html>
+"""
+
+
+class TestParseAddJudgeResponse:
+    def test_success_with_judge_id(self):
+        parse = _import_parse_add_judge_response()
+        result = parse(ADD_JUDGE_SUCCESS_WITH_ID_HTML)
+        assert result["success"] is True
+        assert result["judge_id"] == 12345
+        assert result["error"] is None
+
+    def test_success_without_judge_id(self):
+        parse = _import_parse_add_judge_response()
+        result = parse(ADD_JUDGE_SUCCESS_NO_ID_HTML)
+        assert result["success"] is True
+        assert result["judge_id"] is None
+        assert result["error"] is None
+
+    def test_error_message_detected(self):
+        parse = _import_parse_add_judge_response()
+        result = parse(ADD_JUDGE_ERROR_HTML)
+        assert result["success"] is False
+        assert result["error"] is not None
+        assert "error" in result["error"].lower()
+
+    def test_form_rerendered_is_failure(self):
+        parse = _import_parse_add_judge_response()
+        result = parse(ADD_JUDGE_FORM_RERENDERED_HTML)
+        assert result["success"] is False
+
+    def test_empty_html_assumes_success(self):
+        parse = _import_parse_add_judge_response()
+        result = parse("")
+        assert result["success"] is True
+        assert result["judge_id"] is None
+
+    def test_judge_list_rendered_is_success(self):
+        parse = _import_parse_add_judge_response()
+        result = parse(ADD_JUDGE_JUDGE_LIST_HTML)
+        assert result["success"] is True
