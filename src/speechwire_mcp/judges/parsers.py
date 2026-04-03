@@ -320,3 +320,61 @@ def parse_add_judge_response(html: str) -> Dict:
 
     # ambiguous 200 — assume success
     return {"success": True, "judge_id": None, "error": None}
+
+
+def parse_judge_types_from_html(html: str) -> List[Dict]:
+    """Parse the judge types list page into structured records.
+
+    Parameters
+    ----------
+    html : str
+        Raw HTML of ``judgetypes-list.php``.
+
+    Returns
+    -------
+    list[dict]
+        Each dict has ``judge_type_id`` (int), ``judge_type`` (str),
+        and ``groupings`` (list[str]).
+    """
+    soup = make_soup(html)
+    table = soup.find("table", class_="dd")
+    if table is None:
+        return []
+
+    records: List[Dict] = []
+
+    for tr in table.find_all("tr"):
+        if "tableheader" in (tr.get("class") or []):
+            continue
+
+        tds = tr.find_all("td")
+        if not tds:
+            continue
+
+        # Col 0: judge type name + judge_type_id from link
+        name_td = td_safe(tds, 0)
+        judge_type_id: Optional[int] = None
+        judge_type: Optional[str] = None
+        if name_td:
+            link = name_td.find("a")
+            if link:
+                judge_type_id = extract_int_query_param(link, "judgetypeid")
+                judge_type = link.get_text(strip=True) or None
+
+        if judge_type_id is None:
+            continue
+
+        # Col 1: comma-separated grouping codes
+        groupings_td = td_safe(tds, 1)
+        groupings: List[str] = []
+        if groupings_td:
+            raw = groupings_td.get_text(strip=True)
+            groupings = [g.strip() for g in raw.split(",") if g.strip()]
+
+        records.append({
+            "judge_type_id": judge_type_id,
+            "judge_type": judge_type,
+            "groupings": groupings,
+        })
+
+    return records

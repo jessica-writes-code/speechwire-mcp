@@ -25,6 +25,7 @@ from speechwire_mcp.judges import (
     get_judge_availability,
     get_judge_school,
     add_judge,
+    get_judge_types,
 )
 from speechwire_mcp.schematics import (
     get_schematic_events,
@@ -384,6 +385,26 @@ def speechwire_add_judge(
         ),
         "Failed to add judge",
         default={"success": False, "judge_id": None, "error": "unexpected error"},
+        require_tournament=True,
+    )
+
+
+@mcp.tool()
+def speechwire_list_judge_types() -> list[dict]:
+    """List judge types configured for the tournament.
+
+    Returns a list of records, each containing:
+    - judge_type_id: int — numeric judge type identifier (use with speechwire_add_judge)
+    - judge_type: str — judge type name (e.g., "A", "B", "Speech judge")
+    - groupings: list[str] — grouping codes this type can judge
+                 (e.g., ["J-CX", "NRP-CX", "RO-CX"])
+
+    If no judge types are configured for the tournament, returns an empty list.
+    """
+    return _safe_tool_call(
+        lambda: get_judge_types(_get_client()),
+        "Failed to list judge types",
+        default=[],
         require_tournament=True,
     )
 

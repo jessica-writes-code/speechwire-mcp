@@ -8,6 +8,7 @@ from speechwire_mcp.judges.parsers import (
     parse_availability_from_edit_html,
     parse_school_from_edit_html,
     parse_add_judge_response,
+    parse_judge_types_from_html,
 )
 
 logger = logging.getLogger(__name__)
@@ -181,4 +182,27 @@ def add_judge(
         parse_add_judge_response,
         default={"success": False, "judge_id": None, "error": "request failed"},
         context="add judge",
+    )
+
+
+def get_judge_types(client: SpeechWireClient) -> List[Dict]:
+    """Fetch and parse the judge types for the active tournament.
+
+    Parameters
+    ----------
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+
+    Returns
+    -------
+    list[dict]
+        Each dict has ``judge_type_id`` (int), ``judge_type`` (str),
+        and ``groupings`` (list[str]).
+    """
+    return _fetch_and_parse(
+        client,
+        "https://manage.speechwire.com/tabroom/judgetypes-list.php",
+        parse_judge_types_from_html,
+        default=[],
+        context="judge types list",
     )

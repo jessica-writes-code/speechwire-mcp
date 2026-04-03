@@ -12,6 +12,7 @@ from speechwire_mcp.judges.parsers import (
     parse_judge_list_from_html,
     parse_availability_from_edit_html,
     parse_school_from_edit_html,
+    parse_judge_types_from_html,
 )
 
 
@@ -516,3 +517,94 @@ class TestParseAddJudgeResponse:
         parse = _import_parse_add_judge_response()
         result = parse(ADD_JUDGE_JUDGE_LIST_HTML)
         assert result["success"] is True
+
+
+# ---------------------------------------------------------------------------
+# Judge Types parser tests
+# ---------------------------------------------------------------------------
+
+JUDGE_TYPES_HTML = """<!DOCTYPE html>
+<html><body>
+  <p class="pagetitle">Judge types</p>
+  <table class='dd'>
+    <tr class='tableheader'><td class='dd'>Judge type</td><td class='dd'>Can judge these groupings</td></tr>
+    <tr><td class='dd'><a href='judgetypes-edit.php?judgetypeid=10'>A</a></td><td class='dd'>J-CX, NRP-CX, RO-CX</td></tr>
+    <tr class='tar'><td class='dd'><a href='judgetypes-edit.php?judgetypeid=11'>B</a></td><td class='dd'>J-CX, NRP-CX, RO-CX, V-CX</td></tr>
+    <tr><td class='dd'><a href='judgetypes-edit.php?judgetypeid=12'>C</a></td><td class='dd'>DEE-CX, J-CX, NRP-CX, RO-CX</td></tr>
+  </table>
+</body></html>
+"""
+
+JUDGE_TYPES_SINGLE_HTML = """<!DOCTYPE html>
+<html><body>
+  <table class='dd'>
+    <tr class='tableheader'><td class='dd'>Judge type</td><td class='dd'>Can judge these groupings</td></tr>
+    <tr><td class='dd'><a href='judgetypes-edit.php?judgetypeid=5'>Speech</a></td><td class='dd'>LD, Extemp</td></tr>
+  </table>
+</body></html>
+"""
+
+JUDGE_TYPES_NO_TABLE_HTML = """<!DOCTYPE html>
+<html><body>
+  <p class="pagetitle">Judge types</p>
+  <p>If you want, you can create judge types.</p>
+  <p><input type="button" value="Add a judge type" class="subutton"></p>
+</body></html>
+"""
+
+JUDGE_TYPES_EMPTY_TABLE_HTML = """<!DOCTYPE html>
+<html><body>
+  <table class='dd'>
+    <tr class='tableheader'><td class='dd'>Judge type</td><td class='dd'>Can judge these groupings</td></tr>
+  </table>
+</body></html>
+"""
+
+JUDGE_TYPES_EMPTY_GROUPINGS_HTML = """<!DOCTYPE html>
+<html><body>
+  <table class='dd'>
+    <tr class='tableheader'><td class='dd'>Judge type</td><td class='dd'>Can judge these groupings</td></tr>
+    <tr><td class='dd'><a href='judgetypes-edit.php?judgetypeid=20'>General</a></td><td class='dd'></td></tr>
+  </table>
+</body></html>
+"""
+
+
+class TestParseJudgeTypes:
+    def test_multiple_judge_types(self):
+        result = parse_judge_types_from_html(JUDGE_TYPES_HTML)
+        assert len(result) == 3
+        assert [r["judge_type_id"] for r in result] == [10, 11, 12]
+        assert [r["judge_type"] for r in result] == ["A", "B", "C"]
+
+    def test_single_judge_type(self):
+        result = parse_judge_types_from_html(JUDGE_TYPES_SINGLE_HTML)
+        assert len(result) == 1
+        assert result[0]["judge_type_id"] == 5
+        assert result[0]["judge_type"] == "Speech"
+        assert result[0]["groupings"] == ["LD", "Extemp"]
+
+    def test_groupings_parsed_correctly(self):
+        result = parse_judge_types_from_html(JUDGE_TYPES_HTML)
+        assert result[0]["groupings"] == ["J-CX", "NRP-CX", "RO-CX"]
+
+    def test_no_table_returns_empty(self):
+        assert parse_judge_types_from_html(JUDGE_TYPES_NO_TABLE_HTML) == []
+
+    def test_empty_table_returns_empty(self):
+        assert parse_judge_types_from_html(JUDGE_TYPES_EMPTY_TABLE_HTML) == []
+
+    def test_empty_groupings(self):
+        result = parse_judge_types_from_html(JUDGE_TYPES_EMPTY_GROUPINGS_HTML)
+        assert len(result) == 1
+        assert result[0]["groupings"] == []
+
+    def test_empty_html_returns_empty(self):
+        assert parse_judge_types_from_html("") == []
+
+    def test_records_have_required_keys(self):
+        result = parse_judge_types_from_html(JUDGE_TYPES_HTML)
+        for record in result:
+            assert "judge_type_id" in record
+            assert "judge_type" in record
+            assert "groupings" in record
