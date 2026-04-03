@@ -32,7 +32,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
     -------
     list[dict]
         Each record contains: judge_id, name, team, team_id, is_coach,
-        is_active, is_clean, is_priority, unavailability, blocks.
+        is_active, is_clean, is_priority, email, unavailability, blocks.
     """
     soup = make_soup(html)
     table = soup.find("table", class_="dd")
@@ -85,6 +85,14 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
         prio_val = _selected_value(td_safe(tds, 6), "judgepriorityupd")
         is_priority = prio_val == "1" if prio_val is not None else False
 
+        # Col 7: Email address
+        email: str | None = None
+        email_td = td_safe(tds, 7)
+        if email_td:
+            email_match = _EMAIL_RE.search(email_td.get_text(" ", strip=True))
+            if email_match:
+                email = email_match.group(0).lower()
+
         # Col 8: Unavailability text
         unavail_td = td_safe(tds, 8)
         unavailability: Optional[str] = None
@@ -111,6 +119,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
                 "is_active": is_active,
                 "is_clean": is_clean,
                 "is_priority": is_priority,
+                "email": email,
                 "unavailability": unavailability,
                 "blocks": blocks,
             }

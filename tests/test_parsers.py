@@ -6,6 +6,7 @@ from fake_data import (
     ROSSLYN_ACADEMY,
     POTOMAC_ACADEMY,
     CHESAPEAKE_PREP,
+    email_for,
 )
 from speechwire_mcp.judges.parsers import (
     parse_judge_edit_contact_html,
@@ -157,6 +158,7 @@ def test_judge_list_happy_path():
     assert r["unavailability"] == "Sat., 8:00 AM-5:00 PM"
     assert r["blocks"] == ["GROUPING: Varsity Policy Debate", "GROUPING: JV Policy Debate"]
     assert r["is_coach"] is False
+    assert r["email"] == "jane@example.com"
 
 
 def test_judge_list_inactive_judge():
@@ -184,6 +186,34 @@ def test_judge_list_not_clean_not_priority():
     r = parse_judge_list_from_html(html)[0]
     assert r["is_clean"] is False
     assert r["is_priority"] is False
+
+
+# ---------------------------------------------------------------------------
+# Email extraction tests
+# ---------------------------------------------------------------------------
+
+
+def test_judge_list_email_present():
+    """Email address is extracted from column 7."""
+    html = _wrap_table(
+        _make_judge_row(judge_id=70, name="Donna Moss", email=email_for(DONNA_MOSS))
+    )
+    r = parse_judge_list_from_html(html)[0]
+    assert r["email"] == email_for(DONNA_MOSS)
+
+
+def test_judge_list_email_absent():
+    """Missing email yields None."""
+    html = _wrap_table(_make_judge_row(judge_id=71, email=""))
+    r = parse_judge_list_from_html(html)[0]
+    assert r["email"] is None
+
+
+def test_judge_list_email_normalised_to_lowercase():
+    """Email addresses are lowercased."""
+    html = _wrap_table(_make_judge_row(judge_id=72, email="Jane.Doe@Example.COM"))
+    r = parse_judge_list_from_html(html)[0]
+    assert r["email"] == "jane.doe@example.com"
 
 
 def test_judge_list_empty_unavailability():
@@ -214,6 +244,7 @@ def test_judge_list_minimal_row():
     assert r["is_active"] is True  # default when no select found
     assert r["is_clean"] is False
     assert r["is_priority"] is False
+    assert r["email"] is None
     assert r["unavailability"] is None
     assert r["blocks"] == []
     assert r["is_coach"] is False
