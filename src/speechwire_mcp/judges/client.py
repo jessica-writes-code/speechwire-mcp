@@ -1,12 +1,17 @@
 from typing import List, Dict
+import logging
 
-from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse
+from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse, _post_and_parse
 from speechwire_mcp.judges.parsers import (
     parse_judge_list_from_html,
     parse_judge_edit_contact_html,
     parse_availability_from_edit_html,
     parse_school_from_edit_html,
+    parse_add_judge_response,
+    parse_judge_types_from_html,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_judge_list(client: SpeechWireClient) -> List[Dict]:
@@ -57,9 +62,7 @@ def get_judge_contact(judge_id: int, client: SpeechWireClient) -> Dict:
     )
 
 
-def get_judge_availability(
-    judge_id: int, client: SpeechWireClient
-) -> List[Dict]:
+def get_judge_availability(judge_id: int, client: SpeechWireClient) -> List[Dict]:
     """Fetch and parse a judge's availability from their edit page."""
     return _fetch_and_parse(
         client,
@@ -94,4 +97,112 @@ def get_judge_school(judge_id: int, client: SpeechWireClient) -> Dict:
             "team_id": None,
         },
         context=f"school for {judge_id}",
+    )
+
+
+def add_judge(
+    client: SpeechWireClient,
+    judge_name: str,
+    judge_email: str = "",
+    team_id: int = 0,
+    judge_type_id: int = 0,
+    is_clean: bool = False,
+    is_coach: bool = False,
+    is_priority: bool = False,
+    available_slots: list[int] | None = None,
+) -> Dict:
+    """Add a new judge to the active tournament.
+
+    Parameters
+    ----------
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+    judge_name : str
+        Judge's full name (required).
+    judge_email : str
+        Email address (optional).
+    team_id : int
+        Team/school ID (required). Get valid IDs from speechwire_list_teams.
+    judge_type_id : int
+        Judge type code. Values are tournament-specific; check the
+        tournament's add-judge page for available options.
+    is_clean : bool
+        Clean/neutral judge flag.
+    is_coach : bool
+        Coach flag.
+    is_priority : bool
+        Priority judge flag.
+    available_slots : list[int] | None
+        1-indexed time slot numbers the judge is available for.
+        If None or empty, judge is blocked for all slots.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    # --- input validation ---
+    if not judge_name.strip():
+        return {"success": False, "judge_id": None, "error": "judge_name is required"}
+    if not team_id:
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "team_id is required (use speechwire_list_teams to find valid IDs)",
+        }
+
+    # --- pre-fetch the add-judge form (required for server-side session state) ---
+    _ADD_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-add.php"
+    _EDIT_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-edit.php"
+    try:
+        client.session.get(_ADD_JUDGE_URL)
+    except Exception:
+        logger.warning("Failed to pre-fetch add-judge form")
+
+    # --- build form data ---
+    form_data: dict[str, str] = {
+        "judgename": judge_name.strip(),
+        "judgeemail": judge_email.strip(),
+        "teamid": str(team_id),
+        "judgetypeid": str(judge_type_id),
+        "judgeisclean": "1" if is_clean else "0",
+        "judgeiscoach": "1" if is_coach else "0",
+        "judgeispriority": "1" if is_priority else "0",
+        "mode": "addjudge",
+        "Submit": "Create judge",
+    }
+    if available_slots:
+        for slot in available_slots:
+            form_data[f"slotunblock[{slot}]"] = "1"
+
+    return _post_and_parse(
+        client,
+        _EDIT_JUDGE_URL,
+        form_data,
+        parse_add_judge_response,
+        default={"success": False, "judge_id": None, "error": "request failed"},
+        context="add judge",
+    )
+
+
+def get_judge_types(client: SpeechWireClient) -> List[Dict]:
+    """Fetch and parse the judge types for the active tournament.
+
+    Parameters
+    ----------
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+
+    Returns
+    -------
+    list[dict]
+        Each dict has ``judge_type_id`` (int), ``judge_type`` (str),
+        and ``groupings`` (list[str]).
+    """
+    return _fetch_and_parse(
+        client,
+        "https://manage.speechwire.com/tabroom/judgetypes-list.php",
+        parse_judge_types_from_html,
+        default=[],
+        context="judge types list",
     )

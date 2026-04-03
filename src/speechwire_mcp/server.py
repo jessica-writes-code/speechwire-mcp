@@ -24,6 +24,8 @@ from speechwire_mcp.judges import (
     get_judge_contact,
     get_judge_availability,
     get_judge_school,
+    add_judge,
+    get_judge_types,
 )
 from speechwire_mcp.schematics import (
     get_schematic_events,
@@ -58,9 +60,7 @@ def _get_client() -> SpeechWireClient:
         required = ["SPEECHWIRE_EMAIL", "SPEECHWIRE_PASSWORD"]
         missing = [k for k in required if not os.environ.get(k)]
         if missing:
-            raise RuntimeError(
-                f"Missing required environment variables: {', '.join(missing)}"
-            )
+            raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
         _client = SpeechWireClient(
             email=os.environ["SPEECHWIRE_EMAIL"],
             password=os.environ["SPEECHWIRE_PASSWORD"],
@@ -332,6 +332,79 @@ def speechwire_get_judge_school(judge_id: int) -> dict:
         lambda: get_judge_school(judge_id, _get_client()),
         f"Failed to get school for judge {judge_id}",
         default={"error": "school_fetch_failed", "judge_id": judge_id},
+        require_tournament=True,
+    )
+
+
+@mcp.tool()
+def speechwire_add_judge(
+    judge_name: str,
+    judge_email: str = "",
+    team_id: int = 0,
+    judge_type_id: int = 0,
+    is_clean: bool = False,
+    is_coach: bool = False,
+    is_priority: bool = False,
+    available_slots: list[int] | None = None,
+) -> dict:
+    """Add a new judge to the tournament.
+
+    Parameters
+    ----------
+    judge_name : str
+        Judge's full name (required).
+    judge_email : str
+        Email address (optional).
+    team_id : int
+        Team/school ID (required). Get valid IDs from speechwire_list_teams.
+    judge_type_id : int
+        Judge type code. Values are tournament-specific; check the
+        tournament's add-judge page for available options.
+    is_clean : bool
+        Whether the judge is a clean/neutral judge.
+    is_coach : bool
+        Whether the judge is a coach.
+    is_priority : bool
+        Whether the judge is a priority judge.
+    available_slots : list[int] | None
+        List of 1-indexed time slot numbers the judge is available for.
+        If omitted, the judge is blocked for all slots.
+        Get valid slot numbers from speechwire_list_timeslots.
+    """
+    return _safe_tool_call(
+        lambda: add_judge(
+            _get_client(),
+            judge_name=judge_name,
+            judge_email=judge_email,
+            team_id=team_id,
+            judge_type_id=judge_type_id,
+            is_clean=is_clean,
+            is_coach=is_coach,
+            is_priority=is_priority,
+            available_slots=available_slots,
+        ),
+        "Failed to add judge",
+        default={"success": False, "judge_id": None, "error": "unexpected error"},
+        require_tournament=True,
+    )
+
+
+@mcp.tool()
+def speechwire_list_judge_types() -> list[dict]:
+    """List judge types configured for the tournament.
+
+    Returns a list of records, each containing:
+    - judge_type_id: int — numeric judge type identifier (use with speechwire_add_judge)
+    - judge_type: str — judge type name (e.g., "A", "B", "Speech judge")
+    - groupings: list[str] — grouping codes this type can judge
+                 (e.g., ["J-CX", "NRP-CX", "RO-CX"])
+
+    If no judge types are configured for the tournament, returns an empty list.
+    """
+    return _safe_tool_call(
+        lambda: get_judge_types(_get_client()),
+        "Failed to list judge types",
+        default=[],
         require_tournament=True,
     )
 
