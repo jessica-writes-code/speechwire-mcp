@@ -192,6 +192,35 @@ class TestStateGating:
             with pytest.raises(Exception):
                 client.ensure_tournament_session()
 
+    def test_get_no_recursion_on_expired_session(self):
+        """get() must not recurse when _authenticate also triggers get()."""
+        from unittest.mock import patch, MagicMock
+
+        SpeechWireClient = _import_client()
+        client = SpeechWireClient(email="u@x.com", password="p")
+
+        expired_resp = MagicMock()
+        expired_resp.text = '<input type="password" />'
+        expired_resp.url = "https://manage.speechwire.com/tabroom/judges.php"
+
+        client.session.get = MagicMock(return_value=expired_resp)
+
+        call_count = 0
+
+        def fake_authenticate():
+            nonlocal call_count
+            call_count += 1
+            if call_count > 5:
+                raise RuntimeError("recursion detected")
+            # Simulate what _authenticate does: call get() again
+            client.get("https://www.speechwire.com/c-account-select.php")
+
+        with patch.object(client, "_authenticate", side_effect=fake_authenticate):
+            client.get("https://www.speechwire.com/c-account-select.php")
+
+        # _authenticate should only be called once, not recursively
+        assert call_count == 1
+
 
 # ---------------------------------------------------------------------------
 # Tests — _require_tournament backward-compatibility guard
