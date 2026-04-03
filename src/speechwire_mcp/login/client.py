@@ -40,7 +40,7 @@ def get_accounts(client: SpeechWireClient) -> list[dict]:
 
 
 def get_tournaments(client: SpeechWireClient) -> list[dict]:
-    """Fetch and parse the tournaments for the selected account.
+    """Fetch and parse all tournaments (current and past seasons).
 
     The client must be in ``ACCOUNT_SELECTED`` (or later) state.
 
@@ -52,8 +52,9 @@ def get_tournaments(client: SpeechWireClient) -> list[dict]:
     Returns
     -------
     list[dict]
-        Each dict has ``tournament_id`` (int), ``circuit_id`` (int),
-        ``name`` (str), and ``date`` (str | None).
+        Each dict has ``tournament_id`` (int), ``circuit_id`` (int | None),
+        ``name`` (str), ``date`` (str | None), and ``season`` (str, either
+        ``"current"`` or ``"past"``).
     """
     return _fetch_and_parse(
         client,

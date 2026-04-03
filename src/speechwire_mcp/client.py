@@ -245,23 +245,6 @@ class SpeechWireClient:
                 options=accounts,
             )
 
-    def _auto_select_tournament(self) -> None:
-        """Discover tournaments and auto-select if exactly one exists."""
-        tournaments = self.discover_tournaments()
-        if len(tournaments) == 1:
-            t = tournaments[0]
-            self.select_tournament(t["tournament_id"], t["circuit_id"])
-            logger.info("Auto-selected sole tournament: %s", t.get("name"))
-        elif len(tournaments) == 0:
-            raise SpeechWireAuthError(
-                "No tournaments found for this account."
-            )
-        else:
-            raise SpeechWireSelectionRequired(
-                "Multiple tournaments available — please select one.",
-                options=tournaments,
-            )
-
     # ------------------------------------------------------------------
     # Convenience wrappers
     # ------------------------------------------------------------------
@@ -293,8 +276,6 @@ class SpeechWireClient:
 
         if self.tournament_id and self.circuit_id:
             self.select_tournament(self.tournament_id, self.circuit_id)
-        else:
-            self._auto_select_tournament()
 
     # ------------------------------------------------------------------
     # HTTP helpers
