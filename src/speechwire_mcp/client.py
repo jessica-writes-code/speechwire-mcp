@@ -78,6 +78,7 @@ class SpeechWireClient:
         self.tournament_id = tournament_id
         self.session = requests.Session()
         self.state = ClientState.UNAUTHENTICATED
+        self._reauthenticating = False
 
     # ------------------------------------------------------------------
     # Phased auth methods
@@ -322,11 +323,16 @@ class SpeechWireClient:
 
         If the response looks like an expired session (login page redirect
         or unexpected tournament-selection text), the client re-authenticates
-        and retries the request once.
+        and retries the request once.  A guard prevents infinite recursion
+        when ``_authenticate`` itself issues GETs (e.g. account discovery).
         """
         resp = self.session.get(url)
-        if self._looks_like_expired_session(resp):
-            self._authenticate()
+        if self._looks_like_expired_session(resp) and not self._reauthenticating:
+            self._reauthenticating = True
+            try:
+                self._authenticate()
+            finally:
+                self._reauthenticating = False
             resp = self.session.get(url)
         return resp
 
