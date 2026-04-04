@@ -15,6 +15,13 @@ from typing import Callable, TypeVar
 
 from mcp.server.fastmcp import FastMCP
 
+try:
+    from importlib.metadata import version as _get_version
+
+    _server_version = _get_version("speechwire-mcp")
+except Exception:
+    _server_version = "0.1.0"
+
 from speechwire_mcp.client import (
     ClientState,
     SpeechWireClient,
@@ -42,6 +49,7 @@ mcp = FastMCP(
     "SpeechWire MCP Server",
     instructions="Access SpeechWire tournament judge data via the Model Context Protocol",
 )
+mcp._mcp_server.version = _server_version
 
 _client: SpeechWireClient | None = None
 
