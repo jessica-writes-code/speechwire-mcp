@@ -12,6 +12,7 @@ from speechwire_mcp.rooms import get_room_counts, get_room_list, get_room_usage
 from speechwire_mcp.schematics import get_schematic_events, get_round_schematic
 from speechwire_mcp.structure import get_groupings, get_timeslots
 from speechwire_mcp.teams import get_team_list, get_team_entries, get_hybrid_entries
+from speechwire_mcp.results import get_tab_sheet
 
 __all__ = [
     "SpeechWireClient",
@@ -32,4 +33,5 @@ __all__ = [
     "get_team_list",
     "get_team_entries",
     "get_hybrid_entries",
+    "get_tab_sheet",
 ]
