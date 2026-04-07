@@ -42,6 +42,7 @@ from speechwire_mcp.login import get_accounts, get_tournaments
 from speechwire_mcp.rooms import get_room_list, get_room_usage, get_room_counts
 from speechwire_mcp.teams import get_team_list, get_team_entries, get_hybrid_entries
 from speechwire_mcp.structure import get_groupings, get_timeslots
+from speechwire_mcp.results import get_tab_sheet
 
 logger = logging.getLogger(__name__)
 
@@ -649,6 +650,45 @@ def speechwire_get_round_schematic(grouping_id: int, round_number: int) -> dict 
     return _safe_tool_call(
         lambda: get_round_schematic(grouping_id, round_number, _get_client()),
         f"Failed to get schematic for grouping {grouping_id} round {round_number}",
+        default={},
+        require_tournament=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Results / Tab Sheet Tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def speechwire_get_tab_sheet(grouping_id: int) -> dict | list:
+    """Get the results tab sheet for a competition grouping.
+
+    Returns round-by-round outcomes (W/L/BYE/FORFEIT), per-speaker scores,
+    win-loss records, total points, and final placements.
+
+    Parameters
+    ----------
+    grouping_id : int
+        Grouping identifier from speechwire_list_groupings.
+
+    Returns a dict containing:
+    - grouping_name: str — name of the grouping
+    - round_names: list[str] — round column headers (e.g., "Round 1")
+    - competitors: list[dict] — one per team, each with:
+        - comp_id: int — competitor identifier
+        - name: str — team display name
+        - rounds: list[dict] — per-round results with result, opponent, side,
+          judge, judge_number
+        - record: str — e.g. "3-0"
+        - total_points: float | None — combined speaker points
+        - placement: str — e.g. "2nd"
+        - speakers: list[dict] — individual speakers with name, round_scores,
+          total_points, and placement
+    """
+    return _safe_tool_call(
+        lambda: get_tab_sheet(grouping_id, _get_client()),
+        f"Failed to get tab sheet for grouping {grouping_id}",
         default={},
         require_tournament=True,
     )
