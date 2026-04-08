@@ -24,6 +24,7 @@ from fake_data import (
     KATE_HARPER,
     LOU_THORNTON,
     LYMAN_HS,
+    LYMAN_MS,
     MALLORY_OBRIEN,
     MANCHESTER_PREP,
     MANDY_HAMPTON,
@@ -38,6 +39,7 @@ from fake_data import (
     RUSSELL_HS,
     SAGAMORE_PREP,
     SAM_SEABORN,
+    SEABORN_HS,
     SANTOS_ACADEMY,
     SANTOS_HS,
     STACKHOUSE_ACADEMY,
@@ -377,7 +379,7 @@ def test_parse_team_entries_entry_code_extraction():
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Public Forum Debate (Varsity)</div>
     <div>
-    Seaborn HS AbCd:
+    {SEABORN_HS} AbCd:
     <select name="oldcompinput[80][1][1]"><option value="500" selected="selected">{ELLIE_BARTLET}</option></select>
     <select name="oldcompinput[80][1][2]"><option value="501" selected="selected">{ARNOLD_VINICK}</option></select>
     <select name="olddivinput[80][1]"><option value="1" selected="selected">Varsity</option></select>
@@ -387,7 +389,7 @@ def test_parse_team_entries_entry_code_extraction():
     """
     entries = parse_team_entries_html(html)
     assert len(entries) == 1
-    assert entries[0]["entry_code"] == "Seaborn HS AbCd"
+    assert entries[0]["entry_code"] == f"{SEABORN_HS} AbCd"
 
 
 def test_parse_team_entries_event_name_from_section_title():
@@ -397,13 +399,13 @@ def test_parse_team_entries_event_name_from_section_title():
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Dramatic Interpretation (Open)</div>
     <div>
-    Lyman MS Em:
+    {LYMAN_MS} Em:
     <select name="oldcompinput[90][1][1]"><option value="600" selected="selected">{MANDY_HAMPTON}</option></select>
     <select name="olddivinput[90][1]"><option value="2" selected="selected">Open</option></select>
     <select name="oldcompdrop[90][1]"><option value="0" selected="selected"></option></select>
     </div>
     <div>
-    Lyman MS Li:
+    {LYMAN_MS} Li:
     <select name="oldcompinput[90][2][1]"><option value="601" selected="selected">{BOB_RUSSELL}</option></select>
     <select name="olddivinput[90][2]"><option value="2" selected="selected">Open</option></select>
     <select name="oldcompdrop[90][2]"><option value="0" selected="selected"></option></select>

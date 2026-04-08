@@ -328,7 +328,7 @@ def test_judge_list_blocks_multiple():
 
 
 def test_judge_list_blocks_single():
-    html = _wrap_table(_make_judge_row(blocks=["TEAM: Chesapeake Prep"]))
+    html = _wrap_table(_make_judge_row(blocks=[f"TEAM: {CHESAPEAKE_PREP}"]))
     r = parse_judge_list_from_html(html)[0]
     assert r["blocks"] == [f"TEAM: {CHESAPEAKE_PREP}"]
 
