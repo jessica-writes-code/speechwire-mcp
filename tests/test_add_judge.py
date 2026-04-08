@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from fake_data import JED_BARTLET, LEO_MCGARRY
+from fake_data import JED_BARTLET, LEO_MCGARRY, email_for
 
 
 def _import_add_judge():
@@ -64,7 +64,7 @@ class TestAddJudgeFormData:
             add_judge(
                 MagicMock(),
                 JED_BARTLET,
-                judge_email="jed@example.com",
+                judge_email=email_for(JED_BARTLET),
                 team_id=42,
                 judge_type_id=10,
                 is_clean=True,
@@ -75,7 +75,7 @@ class TestAddJudgeFormData:
         call_args = mock_post.call_args
         data = call_args[0][2] if len(call_args[0]) > 2 else call_args[1].get("data")
         assert data["judgename"] == JED_BARTLET
-        assert data["judgeemail"] == "jed@example.com"
+        assert data["judgeemail"] == email_for(JED_BARTLET)
         assert data["teamid"] == "42"
         assert data["judgetypeid"] == "10"
         assert data["judgeisclean"] == "1"
