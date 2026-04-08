@@ -7,6 +7,7 @@ from speechwire_mcp.teams.parsers import (
 from fake_data import (
     ABBEY_BARTLET,
     ANDREA_WYATT,
+    CJ_CREGG,
     ANNABETH_SCHOTT,
     ARNOLD_VINICK,
     BAILEY_HS,
@@ -16,6 +17,7 @@ from fake_data import (
     BRUNO_GIANELLI,
     CREGG_MS,
     DEBBIE_FIDERER,
+    DONNA_MOSS,
     ELLIE_BARTLET,
     GLEN_WALKEN,
     HAFFLEY_HS,
@@ -291,7 +293,7 @@ def test_parse_team_entries_multiple_events():
     <div class="sectiontitle">Lincoln-Douglas Debate (Varsity)</div>
     <div>
     School ABC Jo:
-    <select name="oldcompinput[50][1][1]"><option value="100" selected="selected">John Doe</option></select>
+    <select name="oldcompinput[50][1][1]"><option value="100" selected="selected">{CJ_CREGG}</option></select>
     <select name="olddivinput[50][1]"><option value="1" selected="selected">Varsity</option></select>
     <select name="oldcompdrop[50][1]"><option value="0" selected="selected"></option></select>
     </div>
@@ -563,13 +565,13 @@ def test_parse_hybrid_entries_missing_school():
     html = f"""
     <table class='dd'>
     <tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr>
-    <tr><td class='dd'>Extemp Speaking</td><td class='dd'>Varsity</td><td class='dd'>Jane Doe<br />{RON_BUTTERFIELD} ({CREGG_MS})</td><td class='dd'>Hybrid Entries JaBo</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=250'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=250&mode=drop'"></td><td class='dd'>{CREGG_MS}</td></tr>
+    <tr><td class='dd'>Extemp Speaking</td><td class='dd'>Varsity</td><td class='dd'>{DONNA_MOSS}<br />{RON_BUTTERFIELD} ({CREGG_MS})</td><td class='dd'>Hybrid Entries JaBo</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=250'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=250&mode=drop'"></td><td class='dd'>{CREGG_MS}</td></tr>
     </table>
     """
     entries = parse_hybrid_entries_html(html)
     assert len(entries) == 1
     assert len(entries[0]["students"]) == 2
-    assert entries[0]["students"][0]["name"] == "Jane Doe"
+    assert entries[0]["students"][0]["name"] == DONNA_MOSS
     assert entries[0]["students"][0]["school"] is None
     assert entries[0]["students"][1]["name"] == RON_BUTTERFIELD
     assert entries[0]["students"][1]["school"] == CREGG_MS

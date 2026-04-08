@@ -2,7 +2,17 @@ from speechwire_mcp.schematics.parsers import (
     parse_schematic_events_html,
     parse_round_schematic_html,
 )
-from fake_data import DANNY_CONCANNON, JOEY_LUCAS, AMY_GARDNER, CHARLIE_YOUNG, AINSLEY_HAYES, WILL_BAILEY
+from fake_data import (
+    AINSLEY_HAYES,
+    AMY_GARDNER,
+    CHARLIE_YOUNG,
+    DANNY_CONCANNON,
+    DONNA_MOSS,
+    JOEY_LUCAS,
+    SAM_SEABORN,
+    TOBY_ZIEGLER,
+    WILL_BAILEY,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +146,7 @@ SAMPLE_ROUND_HTML = f"""<!DOCTYPE html>
 <table class="dd">
 <tr class="tableheader">
   <td colspan="5">Novice Restricted Packet Policy Debate Round 3 - 3:30 PM</td>
-  <td><a href='schem-edit.php?firstsectionid=0&firstjudgeid=9&groupingid=4&round=3&editorsort=normal'>{DANNY_CONCANNON} [3]</a> <a href='schem-edit.php?firstsectionid=0&firstjudgeid=15&groupingid=4&round=3&editorsort=normal'>Jane Smith [2]</a></td>
+  <td><a href='schem-edit.php?firstsectionid=0&firstjudgeid=9&groupingid=4&round=3&editorsort=normal'>{DANNY_CONCANNON} [3]</a> <a href='schem-edit.php?firstsectionid=0&firstjudgeid=15&groupingid=4&round=3&editorsort=normal'>{TOBY_ZIEGLER} [2]</a></td>
 </tr>
 <tr class="tableheader">
   <td>Sect.</td><td>Judge</td><td>Room</td><td colspan="2">Competitors</td>
@@ -177,7 +187,7 @@ def test_parse_round_schematic_happy_path():
     assert unused_by_id[9]["name"] == DANNY_CONCANNON
     assert unused_by_id[9]["rounds_judged"] == 3
     assert 15 in unused_by_id
-    assert unused_by_id[15]["name"] == "Jane Smith"
+    assert unused_by_id[15]["name"] == TOBY_ZIEGLER
     assert unused_by_id[15]["rounds_judged"] == 2
     
     # Verify sections
@@ -238,7 +248,7 @@ def test_parse_round_schematic_no_table():
 
 def test_parse_round_schematic_no_judge():
     """Section with 'Assign judge' text instead of judge link → judge field is None"""
-    html = """<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
     <html><body>
     <table class="dd">
     <tr class="tableheader">
@@ -252,8 +262,8 @@ def test_parse_round_schematic_no_judge():
       <td><a href='view-debate.php?sectionid=100'>A</a></td>
       <td>Assign judge</td>
       <td><a href='rooms-section.php?sectionid=100'>Room 201</a></td>
-      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>John Doe</a> (AFF) (0-0)</td>
-      <td><a href='schem-edit.php?firstcompid=51&groupingid=1&round=1'>Jane Roe</a> (Neg) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>{SAM_SEABORN}</a> (AFF) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=51&groupingid=1&round=1'>{DONNA_MOSS}</a> (Neg) (0-0)</td>
     </tr>
     </table>
     </body></html>
@@ -264,7 +274,7 @@ def test_parse_round_schematic_no_judge():
 
 def test_parse_round_schematic_no_unused_judges():
     """Header row cell 1 is empty or missing → unused_judges is empty list"""
-    html = """<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
     <html><body>
     <table class="dd">
     <tr class="tableheader">
@@ -278,8 +288,8 @@ def test_parse_round_schematic_no_unused_judges():
       <td><a href='view-debate.php?sectionid=100'>A</a></td>
       <td><a href='schem-edit.php?firstsectionid=100&firstjudgeid=5&groupingid=1&round=1&editorsort=normal'>Test Judge [1]</a></td>
       <td><a href='rooms-section.php?sectionid=100'>Room 201</a></td>
-      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>John Doe</a> (AFF) (0-0)</td>
-      <td><a href='schem-edit.php?firstcompid=51&groupingid=1&round=1'>Jane Roe</a> (Neg) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>{SAM_SEABORN}</a> (AFF) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=51&groupingid=1&round=1'>{DONNA_MOSS}</a> (Neg) (0-0)</td>
     </tr>
     </table>
     </body></html>
@@ -290,7 +300,7 @@ def test_parse_round_schematic_no_unused_judges():
 
 def test_parse_round_schematic_no_time():
     """Header has 'Event Round 1' without the ' - Time' part → time is None"""
-    html = """<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
     <html><body>
     <table class="dd">
     <tr class="tableheader">
@@ -304,8 +314,8 @@ def test_parse_round_schematic_no_time():
       <td><a href='view-debate.php?sectionid=100'>A</a></td>
       <td><a href='schem-edit.php?firstsectionid=100&firstjudgeid=5&groupingid=1&round=1&editorsort=normal'>Test Judge [1]</a></td>
       <td><a href='rooms-section.php?sectionid=100'>Room 201</a></td>
-      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>John Doe</a> (AFF) (0-0)</td>
-      <td><a href='schem-edit.php?firstcompid=51&groupingid=1&round=1'>Jane Roe</a> (Neg) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>{SAM_SEABORN}</a> (AFF) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=51&groupingid=1&round=1'>{DONNA_MOSS}</a> (Neg) (0-0)</td>
     </tr>
     </table>
     </body></html>
@@ -318,7 +328,7 @@ def test_parse_round_schematic_no_time():
 
 def test_parse_round_schematic_single_competitor():
     """Section with only one competitor (cell 4 missing or empty)"""
-    html = """<!DOCTYPE html>
+    html = f"""<!DOCTYPE html>
     <html><body>
     <table class="dd">
     <tr class="tableheader">
@@ -332,7 +342,7 @@ def test_parse_round_schematic_single_competitor():
       <td><a href='view-debate.php?sectionid=100'>A</a></td>
       <td><a href='schem-edit.php?firstsectionid=100&firstjudgeid=5&groupingid=1&round=1&editorsort=normal'>Test Judge [1]</a></td>
       <td><a href='rooms-section.php?sectionid=100'>Room 201</a></td>
-      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>John Doe</a> (AFF) (0-0)</td>
+      <td><a href='schem-edit.php?firstcompid=50&groupingid=1&round=1'>{SAM_SEABORN}</a> (AFF) (0-0)</td>
       <td></td>
     </tr>
     </table>
@@ -341,4 +351,4 @@ def test_parse_round_schematic_single_competitor():
     result = parse_round_schematic_html(html)
     assert len(result["sections"]) == 1
     assert len(result["sections"][0]["competitors"]) == 1
-    assert result["sections"][0]["competitors"][0]["name"] == "John Doe"
+    assert result["sections"][0]["competitors"][0]["name"] == SAM_SEABORN

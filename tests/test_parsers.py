@@ -1,15 +1,26 @@
 import pytest
 
 from fake_data import (
+    ABBEY_BARTLET,
+    CHARLIE_YOUNG,
     CHESAPEAKE_PREP,
+    CJ_CREGG,
     DONNA_MOSS,
+    HOLLIS_ACADEMY,
     JED_BARTLET,
     JOSH_LYMAN,
     LEO_MCGARRY,
     MANCHESTER_PREP,
+    NASHUA_PREP,
+    OLIVER_BABISH,
     POTOMAC_ACADEMY,
     ROSSLYN_ACADEMY,
     SAGAMORE_PREP,
+    SAM_SEABORN,
+    SANTOS_ACADEMY,
+    STACKHOUSE_ACADEMY,
+    TOBY_ZIEGLER,
+    WILL_BAILEY,
     email_for,
 )
 from speechwire_mcp.judges.parsers import (
@@ -21,7 +32,7 @@ from speechwire_mcp.judges.parsers import (
 )
 
 
-SAMPLE_EMAIL_HTML = """<!DOCTYPE html>
+SAMPLE_EMAIL_HTML = f"""<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8"/>
@@ -32,7 +43,7 @@ SAMPLE_EMAIL_HTML = """<!DOCTYPE html>
     <form id="form1" name="form1" method="post" action="judges-edit.php">
       <p class='sectiontitle'>General information</p>
       <p>
-        Name: <input class='swtext' id='judgename' type='text' name='judgename' value="Test Judge" size='30' maxlength='50'>
+        Name: <input class='swtext' id='judgename' type='text' name='judgename' value="{SAM_SEABORN}" size='30' maxlength='50'>
         Email address: <input class='swtext' id='judgeemail' type='text' name='judgeemail' value="test.user@example.org" size='30' maxlength='50'>
       </p>
     </form>
@@ -80,8 +91,8 @@ def test_parse_availability_basic():
 
 def _make_judge_row(
     judge_id=1,
-    name="Test Judge",
-    team="Test School",
+    name=SAM_SEABORN,
+    team=NASHUA_PREP,
     teamid=10,
     active_val="0",
     clean_val="0",
@@ -138,7 +149,7 @@ def test_judge_list_happy_path():
     html = _wrap_table(
         _make_judge_row(
             judge_id=42,
-            name="Jane Doe",
+            name=TOBY_ZIEGLER,
             team=CHESAPEAKE_PREP,
             teamid=7,
             active_val="0",
@@ -153,7 +164,7 @@ def test_judge_list_happy_path():
     assert len(records) == 1
     r = records[0]
     assert r["judge_id"] == 42
-    assert r["name"] == "Jane Doe"
+    assert r["name"] == TOBY_ZIEGLER
     assert r["team"] == CHESAPEAKE_PREP
     assert r["team_id"] == 7
     assert r["is_active"] is True
@@ -269,18 +280,18 @@ def test_judge_list_coach_true():
 
 def test_judge_list_coach_false():
     """Judge without (Coach) indicator should have is_coach=False."""
-    html = _wrap_table(_make_judge_row(judge_id=50, name="Regular Judge", coach=False))
+    html = _wrap_table(_make_judge_row(judge_id=50, name=CJ_CREGG, coach=False))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_coach"] is False
-    assert r["name"] == "Regular Judge"
+    assert r["name"] == CJ_CREGG
 
 
 def test_judge_list_mixed_coach_and_non_coach():
     """Table with both coach and non-coach judges."""
     html = _wrap_table(
-        _make_judge_row(judge_id=1, name="Coach Person", coach=True),
-        _make_judge_row(judge_id=2, name="Volunteer Judge", coach=False),
-        _make_judge_row(judge_id=3, name="Another Coach", coach=True),
+        _make_judge_row(judge_id=1, name=CHARLIE_YOUNG, coach=True),
+        _make_judge_row(judge_id=2, name=ABBEY_BARTLET, coach=False),
+        _make_judge_row(judge_id=3, name=OLIVER_BABISH, coach=True),
     )
     records = parse_judge_list_from_html(html)
     assert len(records) == 3
@@ -291,10 +302,10 @@ def test_judge_list_mixed_coach_and_non_coach():
 
 def test_judge_list_backward_compat():
     """Existing judge_id/name fields must remain present and correct."""
-    html = _wrap_table(_make_judge_row(judge_id=33, name="Old Name"))
+    html = _wrap_table(_make_judge_row(judge_id=33, name=WILL_BAILEY))
     r = parse_judge_list_from_html(html)[0]
     assert "judge_id" in r and r["judge_id"] == 33
-    assert "name" in r and r["name"] == "Old Name"
+    assert "name" in r and r["name"] == WILL_BAILEY
 
 
 def test_judge_list_empty_table():
@@ -422,25 +433,25 @@ def test_parse_school_empty_html():
 
 def test_parse_school_name_attribute_fallback():
     """Falls back to name='teamid' when id is missing."""
-    html = """
+    html = f"""
     <select name='teamid'>
-      <option value='10'>Fallback School</option>
-      <option selected value='20'>Selected School</option>
+      <option value='10'>{HOLLIS_ACADEMY}</option>
+      <option selected value='20'>{STACKHOUSE_ACADEMY}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
-    assert result["school"] == "Selected School"
+    assert result["school"] == STACKHOUSE_ACADEMY
     assert result["team_id"] == 20
 
 
 def test_parse_school_non_numeric_value():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option selected value='abc'>Some School</option>
+      <option selected value='abc'>{SANTOS_ACADEMY}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
-    assert result["school"] == "Some School"
+    assert result["school"] == SANTOS_ACADEMY
     assert result["team_id"] is None
 
 
