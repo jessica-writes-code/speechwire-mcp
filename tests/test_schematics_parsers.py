@@ -129,31 +129,31 @@ def test_parse_schematic_events_single_event():
 # Function 2: parse_round_schematic_html Tests
 # ---------------------------------------------------------------------------
 
-SAMPLE_ROUND_HTML = """<!DOCTYPE html>
+SAMPLE_ROUND_HTML = f"""<!DOCTYPE html>
 <html>
 <head><title>Schematic editor</title></head>
 <body>
 <table class="dd">
 <tr class="tableheader">
   <td colspan="5">Novice Restricted Packet Policy Debate Round 3 - 3:30 PM</td>
-  <td><a href='schem-edit.php?firstsectionid=0&firstjudgeid=9&groupingid=4&round=3&editorsort=normal'>Danny Concannon [3]</a> <a href='schem-edit.php?firstsectionid=0&firstjudgeid=15&groupingid=4&round=3&editorsort=normal'>Jane Smith [2]</a></td>
+  <td><a href='schem-edit.php?firstsectionid=0&firstjudgeid=9&groupingid=4&round=3&editorsort=normal'>{DANNY_CONCANNON} [3]</a> <a href='schem-edit.php?firstsectionid=0&firstjudgeid=15&groupingid=4&round=3&editorsort=normal'>Jane Smith [2]</a></td>
 </tr>
 <tr class="tableheader">
   <td>Sect.</td><td>Judge</td><td>Room</td><td colspan="2">Competitors</td>
 </tr>
 <tr>
   <td><a href='view-debate.php?sectionid=291'>A</a></td>
-  <td><a href='schem-edit.php?firstsectionid=291&firstjudgeid=3&groupingid=4&round=3&editorsort=normal'>Joey Lucas [3]</a> <a href='judge-detail.php?judgeid=3'>detail</a></td>
+  <td><a href='schem-edit.php?firstsectionid=291&firstjudgeid=3&groupingid=4&round=3&editorsort=normal'>{JOEY_LUCAS} [3]</a> <a href='judge-detail.php?judgeid=3'>detail</a></td>
   <td><a href='rooms-section.php?sectionid=291'>Room 101</a></td>
-  <td><a href='schem-edit.php?firstcompid=183&groupingid=4&round=3'>Amy Gardner</a> (AFF) (2-0)</td>
-  <td><a href='schem-edit.php?firstcompid=184&groupingid=4&round=3'>Charlie Young</a> (Neg) (1-1)</td>
+  <td><a href='schem-edit.php?firstcompid=183&groupingid=4&round=3'>{AMY_GARDNER}</a> (AFF) (2-0)</td>
+  <td><a href='schem-edit.php?firstcompid=184&groupingid=4&round=3'>{CHARLIE_YOUNG}</a> (Neg) (1-1)</td>
 </tr>
 <tr>
   <td><a href='view-debate.php?sectionid=292'>B</a></td>
   <td>Assign judge</td>
   <td><a href='rooms-section.php?sectionid=292'>Room 102</a></td>
-  <td><a href='schem-edit.php?firstcompid=185&groupingid=4&round=3'>Ainsley Hayes</a> (AFF) (1-1)</td>
-  <td><a href='schem-edit.php?firstcompid=186&groupingid=4&round=3'>Will Bailey</a> (Neg) (0-2)</td>
+  <td><a href='schem-edit.php?firstcompid=185&groupingid=4&round=3'>{AINSLEY_HAYES}</a> (AFF) (1-1)</td>
+  <td><a href='schem-edit.php?firstcompid=186&groupingid=4&round=3'>{WILL_BAILEY}</a> (Neg) (0-2)</td>
 </tr>
 </table>
 </body>

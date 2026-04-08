@@ -1,11 +1,15 @@
 import pytest
 
 from fake_data import (
-    DONNA_MOSS,
-    MANCHESTER_PREP,
-    ROSSLYN_ACADEMY,
-    POTOMAC_ACADEMY,
     CHESAPEAKE_PREP,
+    DONNA_MOSS,
+    JED_BARTLET,
+    JOSH_LYMAN,
+    LEO_MCGARRY,
+    MANCHESTER_PREP,
+    POTOMAC_ACADEMY,
+    ROSSLYN_ACADEMY,
+    SAGAMORE_PREP,
     email_for,
 )
 from speechwire_mcp.judges.parsers import (
@@ -135,7 +139,7 @@ def test_judge_list_happy_path():
         _make_judge_row(
             judge_id=42,
             name="Jane Doe",
-            team="Chesapeake Prep",
+            team=CHESAPEAKE_PREP,
             teamid=7,
             active_val="0",
             clean_val="1",
@@ -257,7 +261,7 @@ def test_judge_list_minimal_row():
 
 def test_judge_list_coach_true():
     """Judge with (Coach) indicator should have is_coach=True."""
-    html = _wrap_table(_make_judge_row(judge_id=102, name="Donna Moss", coach=True))
+    html = _wrap_table(_make_judge_row(judge_id=102, name=DONNA_MOSS, coach=True))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_coach"] is True
     assert r["name"] == DONNA_MOSS
@@ -339,21 +343,21 @@ def test_judge_list_blocks_empty():
 # School (team association) parsing tests
 # ---------------------------------------------------------------------------
 
-SAMPLE_SCHOOL_HTML = """<!DOCTYPE html>
+SAMPLE_SCHOOL_HTML = f"""<!DOCTYPE html>
 <html><head><title>SpeechWire</title></head>
 <body>
 <p class='pagetitle'>Edit judge</p>
 <form id="form1" name="form1" method="post" action="judges-edit.php">
 <p class='sectiontitle'>General information</p>
 <p>Name: <input class='swtext' id='judgename' type='text' name='judgename'
-   value="Josh Lyman" size='30' maxlength='50'>
+   value="{JOSH_LYMAN}" size='30' maxlength='50'>
 Email address: <input class='swtext' id='judgeemail' type='text' name='judgeemail'
-   value="josh.lyman@example.com" size='30' maxlength='50'></p>
+   value="{email_for(JOSH_LYMAN)}" size='30' maxlength='50'></p>
 <p>Team: <select id='teamid' name='teamid'>
-  <option value='69'>Potomac Academy</option>
-  <option selected value='24'>Manchester Prep</option>
-  <option value='36'>Sagamore Prep</option>
-  <option value='85'>Rosslyn Academy</option>
+  <option value='69'>{POTOMAC_ACADEMY}</option>
+  <option selected value='24'>{MANCHESTER_PREP}</option>
+  <option value='36'>{SAGAMORE_PREP}</option>
+  <option value='85'>{ROSSLYN_ACADEMY}</option>
 </select></p>
 </form>
 </body></html>
@@ -367,10 +371,10 @@ def test_parse_school_happy_path():
 
 
 def test_parse_school_first_option_selected():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option selected value='69'>Potomac Academy</option>
-      <option value='24'>Manchester Prep</option>
+      <option selected value='69'>{POTOMAC_ACADEMY}</option>
+      <option value='24'>{MANCHESTER_PREP}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
@@ -379,11 +383,11 @@ def test_parse_school_first_option_selected():
 
 
 def test_parse_school_last_option_selected():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option value='69'>Potomac Academy</option>
-      <option value='24'>Manchester Prep</option>
-      <option selected value='85'>Rosslyn Academy</option>
+      <option value='69'>{POTOMAC_ACADEMY}</option>
+      <option value='24'>{MANCHESTER_PREP}</option>
+      <option selected value='85'>{ROSSLYN_ACADEMY}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
@@ -399,10 +403,10 @@ def test_parse_school_no_select():
 
 
 def test_parse_school_no_selected_option():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option value='69'>Potomac Academy</option>
-      <option value='24'>Manchester Prep</option>
+      <option value='69'>{POTOMAC_ACADEMY}</option>
+      <option value='24'>{MANCHESTER_PREP}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
@@ -454,14 +458,14 @@ def _import_parse_add_judge_response():
         pytest.skip("parse_add_judge_response not implemented yet")
 
 
-ADD_JUDGE_SUCCESS_WITH_ID_HTML = """<!DOCTYPE html>
+ADD_JUDGE_SUCCESS_WITH_ID_HTML = f"""<!DOCTYPE html>
 <html><body>
   <p class='pagetitle'>Judge dashboard</p>
   <table class='dd'>
     <tr class='tableheader'><td>Name</td><td>Team</td></tr>
     <tr>
-      <td><a href='view-judge.php?judgeid=12345'>Jed Bartlet</a></td>
-      <td>Manchester Prep</td>
+      <td><a href='view-judge.php?judgeid=12345'>{JED_BARTLET}</a></td>
+      <td>{MANCHESTER_PREP}</td>
     </tr>
   </table>
 </body></html>
@@ -493,18 +497,18 @@ ADD_JUDGE_FORM_RERENDERED_HTML = """<!DOCTYPE html>
 </body></html>
 """
 
-ADD_JUDGE_JUDGE_LIST_HTML = """<!DOCTYPE html>
+ADD_JUDGE_JUDGE_LIST_HTML = f"""<!DOCTYPE html>
 <html><body>
   <p class='pagetitle'>Judge dashboard</p>
   <table class='dd'>
     <tr class='tableheader'><td>Name</td><td>Team</td></tr>
     <tr>
-      <td><a href='view-judge.php?judgeid=555'>Leo McGarry</a></td>
-      <td>Rosslyn Academy</td>
+      <td><a href='view-judge.php?judgeid=555'>{LEO_MCGARRY}</a></td>
+      <td>{ROSSLYN_ACADEMY}</td>
     </tr>
     <tr>
-      <td><a href='view-judge.php?judgeid=556'>Josh Lyman</a></td>
-      <td>Potomac Academy</td>
+      <td><a href='view-judge.php?judgeid=556'>{JOSH_LYMAN}</a></td>
+      <td>{POTOMAC_ACADEMY}</td>
     </tr>
   </table>
 </body></html>
