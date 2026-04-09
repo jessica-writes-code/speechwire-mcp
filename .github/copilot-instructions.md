@@ -33,6 +33,9 @@ src/speechwire_mcp/
 ├── rooms/
 │   ├── client.py        # Room list, usage grid, count retrieval
 │   └── parsers.py       # Room HTML → structured data parsing
+├── results/
+│   ├── client.py        # Tab sheet results retrieval
+│   └── parsers.py       # Results HTML → structured data parsing
 ├── schematics/
 │   ├── client.py        # Schematic event list & round schematic retrieval
 │   └── parsers.py       # Schematic HTML → structured data parsing
@@ -45,8 +48,8 @@ src/speechwire_mcp/
 ```
 
 - **server.py** is the MCP entry point. Tools are thin wrappers that delegate to
-  domain modules (`judges/`, `login/`, `rooms/`, `schematics/`, `structure/`,
-  `teams/`).
+  domain modules (`judges/`, `login/`, `rooms/`, `results/`, `schematics/`,
+  `structure/`, `teams/`).
 - **client.py** owns all HTTP and authentication logic. The client automatically
   re-authenticates when it detects a session expiry.
 - **parsing_helpers.py** provides shared BeautifulSoup utilities used by all
@@ -56,7 +59,9 @@ src/speechwire_mcp/
   that take HTML strings and return dicts/lists — keep them side-effect free for
   easy testing.
 - **`_fetch_and_parse`** is the shared pattern: fetch a page, run a parser,
-  return a safe default on any failure.
+  return a safe default on any failure. Accepts an optional `params` dict for
+  query parameters — prefer `params={"key": "val"}` over f-string URL
+  interpolation.
 
 ## Conventions
 
@@ -74,6 +79,8 @@ src/speechwire_mcp/
   (`list`, `dict`, `str | None`) — no `typing.List`/`typing.Optional`.
 - **Docstrings:** use NumPy-style docstrings (`Parameters`, `Returns` sections).
 - **Line length:** 100 characters max (enforced by ruff).
+- **URL construction:** use `params={"key": "val"}` in `_fetch_and_parse`
+  calls rather than f-string interpolation to prevent injection risks.
 - **Tests:** parser functions get unit tests in `tests/` with sample HTML
   fixtures. Use `pytest`.
 
@@ -89,7 +96,7 @@ The server requires these at runtime (never hard-code credentials):
 | `SPEECHWIRE_CIRCUIT_ID` | Numeric circuit ID |
 | `SPEECHWIRE_TOURNAMENT_ID` | Numeric tournament ID |
 | `SPEECHWIRE_MCP_TRANSPORT` | `stdio` (default) or `sse` |
-| `SPEECHWIRE_MCP_HOST` | SSE bind host (default `0.0.0.0`) |
+| `SPEECHWIRE_MCP_HOST` | SSE bind host (default `127.0.0.1`) |
 | `SPEECHWIRE_MCP_PORT` | SSE bind port (default `8080`) |
 
 ## Development Workflow
