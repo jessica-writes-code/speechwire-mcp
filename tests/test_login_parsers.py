@@ -193,8 +193,8 @@ MALFORMED_TOURNAMENTS_HTML = """<html><body>
 </body></html>
 """
 
-# Realistic SpeechWire HTML: <select name="tournid"> inside forms
-REAL_SPEECHWIRE_HTML = """<!DOCTYPE html>
+# Sample SpeechWire HTML: <select name="tournid"> inside forms
+SAMPLE_TOURNAMENT_SELECT_HTML = """<!DOCTYPE html>
 <html>
 <head><title>Tournaments</title></head>
 <body>
@@ -220,7 +220,7 @@ REAL_SPEECHWIRE_HTML = """<!DOCTYPE html>
 </html>
 """
 
-REAL_SPEECHWIRE_NO_DATE_HTML = """<html><body>
+SAMPLE_NO_DATE_HTML = """<html><body>
   <form name="formaddexisting">
     <select name='tournid'>
       <option value='99999'>Practice Round No Date</option>
@@ -230,7 +230,7 @@ REAL_SPEECHWIRE_NO_DATE_HTML = """<html><body>
 </body></html>
 """
 
-REAL_SPEECHWIRE_EMPTY_SELECT_HTML = """<html><body>
+SAMPLE_EMPTY_SELECT_HTML = """<html><body>
   <form name="formaddexisting">
     <select name='tournid'>
       <option value=''>-- Select --</option>
@@ -240,7 +240,7 @@ REAL_SPEECHWIRE_EMPTY_SELECT_HTML = """<html><body>
 </body></html>
 """
 
-REAL_SPEECHWIRE_NO_CIRCUIT_HTML = """<html><body>
+SAMPLE_NO_CIRCUIT_HTML = """<html><body>
   <form name="formaddexisting">
     <select name='tournid'>
       <option value='30001'>Solo Tourney (Jan. 1, 2026)</option>
@@ -249,7 +249,7 @@ REAL_SPEECHWIRE_NO_CIRCUIT_HTML = """<html><body>
 </body></html>
 """
 
-REAL_SPEECHWIRE_DATE_RANGE_HTML = """<html><body>
+SAMPLE_DATE_RANGE_HTML = """<html><body>
   <form name="formaddexisting">
     <select name='tournid'>
       <option value='40001'>Weekend Invitational (Feb. 14-15, 2026)</option>
@@ -381,56 +381,56 @@ class TestParseTournamentListHtml:
 class TestParseTournamentListSelectStrategy:
     """Tests for Strategy 1: <select name="tournid"> (real SpeechWire HTML)."""
 
-    def test_real_html_extracts_all_seasons(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
+    def test_sample_html_extracts_all_seasons(self):
+        result = parse_tournament_list_html(SAMPLE_TOURNAMENT_SELECT_HTML)
         # 3 current + 2 past tournaments
         assert len(result) == 5
         tourn_ids = {r["tournament_id"] for r in result}
         assert tourn_ids == {20022, 20074, 21289, 10001, 10002}
 
-    def test_real_html_extracts_circuit_id(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
+    def test_sample_html_extracts_circuit_id(self):
+        result = parse_tournament_list_html(SAMPLE_TOURNAMENT_SELECT_HTML)
         for rec in result:
             assert rec["circuit_id"] == 25
 
-    def test_real_html_extracts_names(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
+    def test_sample_html_extracts_names(self):
+        result = parse_tournament_list_html(SAMPLE_TOURNAMENT_SELECT_HTML)
         names = [r["name"] for r in result]
         assert any("Bartlet" in n for n in names)
         assert any("Thanksgiving" in n for n in names)
         assert any("National Qualifiers" in n for n in names)
 
-    def test_real_html_extracts_dates(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
+    def test_sample_html_extracts_dates(self):
+        result = parse_tournament_list_html(SAMPLE_TOURNAMENT_SELECT_HTML)
         dates = {r["tournament_id"]: r["date"] for r in result}
         assert dates[20022] == "Oct. 25, 2025"
         assert dates[20074] == "Nov. 22, 2025"
         assert dates[21289] == "Mar. 7, 2026"
 
     def test_no_date_returns_none(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_NO_DATE_HTML)
+        result = parse_tournament_list_html(SAMPLE_NO_DATE_HTML)
         assert len(result) == 1
         assert result[0]["date"] is None
         assert result[0]["name"] == "Practice Round No Date"
 
     def test_empty_option_values_skipped(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_EMPTY_SELECT_HTML)
+        result = parse_tournament_list_html(SAMPLE_EMPTY_SELECT_HTML)
         assert result == []
 
     def test_missing_circuit_id_returns_none(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_NO_CIRCUIT_HTML)
+        result = parse_tournament_list_html(SAMPLE_NO_CIRCUIT_HTML)
         assert len(result) == 1
         assert result[0]["circuit_id"] is None
         assert result[0]["tournament_id"] == 30001
         assert result[0]["date"] == "Jan. 1, 2026"
 
     def test_date_range_parsing(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_DATE_RANGE_HTML)
+        result = parse_tournament_list_html(SAMPLE_DATE_RANGE_HTML)
         assert len(result) == 1
         assert result[0]["date"] == "Feb. 14-15, 2026"
 
     def test_records_have_required_keys(self):
-        result = parse_tournament_list_html(REAL_SPEECHWIRE_HTML)
+        result = parse_tournament_list_html(SAMPLE_TOURNAMENT_SELECT_HTML)
         for rec in result:
             assert "tournament_id" in rec
             assert "circuit_id" in rec
