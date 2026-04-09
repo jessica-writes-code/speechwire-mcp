@@ -60,11 +60,7 @@ cp .env.example .env
 
 When account/circuit/tournament IDs are omitted, the server enters **discovery mode** — use the `speechwire_list_user_accounts` and `speechwire_list_user_tournaments` tools to browse and select interactively.
 
-## Usage
-
-### With an MCP client (e.g., Claude Desktop)
-
-Add to your MCP client configuration:
+### MCP client configuration
 
 ```json
 {
@@ -78,16 +74,6 @@ Add to your MCP client configuration:
     }
   }
 }
-```
-
-### Running directly
-
-```bash
-# stdio transport (default)
-speechwire-mcp
-
-# SSE transport
-SPEECHWIRE_MCP_TRANSPORT=sse speechwire-mcp
 ```
 
 ## Available MCP Tools
@@ -115,36 +101,6 @@ SPEECHWIRE_MCP_TRANSPORT=sse speechwire-mcp
 | `speechwire_list_schematic_events` | List schematic events with available rounds |
 | `speechwire_get_round_schematic` | Get pairings for a specific event round |
 | `speechwire_get_tab_sheet` | Get results tab sheet for a grouping |
-
-## Development
-
-```bash
-pip install -e ".[dev]"
-ruff check src/ tests/
-pytest
-```
-
-CI runs on Python 3.11, 3.12, and 3.13.
-
-## Architecture
-
-```
-src/speechwire_mcp/
-├── server.py            # FastMCP server, tool definitions
-├── client.py            # SpeechWireClient (4-step auth), HTTP helpers
-├── parsing_helpers.py   # Shared BeautifulSoup utilities
-├── judges/              # Judge data retrieval and parsing
-├── login/               # Account & tournament discovery
-├── rooms/               # Room list, usage grid, counts
-├── schematics/          # Event list & round schematics
-├── structure/           # Timeslots & competition groupings
-├── teams/               # Team list, entries, hybrid entries
-└── results/             # Tab sheet results
-```
-
-Each domain module follows the same pattern:
-- `parsers.py` — pure functions that convert HTML → structured data
-- `client.py` — retrieval functions using the shared `_fetch_and_parse` helper
 
 ## License
 
