@@ -30,6 +30,7 @@ venv/
 
 # Notebooks (may contain credentials)
 notebooks/
+*.ipynb
 
 # Copilot
 .copilot/

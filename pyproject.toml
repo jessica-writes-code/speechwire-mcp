@@ -40,9 +40,9 @@ dev = [
 speechwire-mcp = "speechwire_mcp.server:main"
 
 [project.urls]
-Homepage = "https://github.com/jessicamoore/SpeechWireMCP"
-Repository = "https://github.com/jessicamoore/SpeechWireMCP"
-Issues = "https://github.com/jessicamoore/SpeechWireMCP/issues"
+Homepage = "https://github.com/jessica-writes-code/speechwire-mcp"
+Repository = "https://github.com/jessica-writes-code/speechwire-mcp"
+Issues = "https://github.com/jessica-writes-code/speechwire-mcp/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/speechwire_mcp"]
