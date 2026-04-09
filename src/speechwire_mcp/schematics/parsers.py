@@ -92,7 +92,7 @@ def parse_round_schematic_html(html: str) -> dict:
     time = None
     header_text = header_tds[0].get_text(strip=True)
     # Format: "Event Name Round N - Time"
-    parts = header_text.split(" Round ")
+    parts = header_text.rsplit(" Round ", 1)
     if len(parts) == 2:
         event_name = parts[0].strip()
         round_and_time = parts[1].split(" - ")

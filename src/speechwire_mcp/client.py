@@ -314,8 +314,12 @@ class SpeechWireClient:
             Form data to submit.
         """
         resp = self.session.post(url, data=data)
-        if self._looks_like_expired_session(resp):
-            self._authenticate()
+        if self._looks_like_expired_session(resp) and not self._reauthenticating:
+            self._reauthenticating = True
+            try:
+                self._authenticate()
+            finally:
+                self._reauthenticating = False
             resp = self.session.post(url, data=data)
         return resp
 
