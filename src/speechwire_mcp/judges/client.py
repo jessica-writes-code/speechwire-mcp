@@ -1,4 +1,3 @@
-from typing import List, Dict
 import logging
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse, _post_and_parse
@@ -14,13 +13,13 @@ from speechwire_mcp.judges.parsers import (
 logger = logging.getLogger(__name__)
 
 
-def get_judge_list(client: SpeechWireClient) -> List[Dict]:
+def get_judge_list(client: SpeechWireClient) -> list[dict]:
     """Retrieve judge list with roster details from the dashboard."""
 
     # Local _parse wrapper filters out records with None judge_id (business logic,
     # not parsing) — this pattern is used when post-processing is needed after
     # HTML parsing. See get_judge_availability for comparison (no wrapper needed).
-    def _parse(html: str) -> List[Dict]:
+    def _parse(html: str) -> list[dict]:
         records = parse_judge_list_from_html(html)
         return [r for r in records if r.get("judge_id") is not None]
 
@@ -33,7 +32,7 @@ def get_judge_list(client: SpeechWireClient) -> List[Dict]:
     )
 
 
-def get_judge_contact(judge_id: int, client: SpeechWireClient) -> Dict:
+def get_judge_contact(judge_id: int, client: SpeechWireClient) -> dict:
     """Fetch judge edit page and return contact information.
 
     Returns a dict with judge_id, email, phone.
@@ -41,7 +40,7 @@ def get_judge_contact(judge_id: int, client: SpeechWireClient) -> Dict:
 
     # Local _parse wrapper injects the judge_id parameter into the result (business
     # logic, not parsing). The parser only extracts email/phone from HTML.
-    def _parse(html: str) -> Dict:
+    def _parse(html: str) -> dict:
         parsed = parse_judge_edit_contact_html(html)
         return {
             "judge_id": judge_id,
@@ -51,7 +50,7 @@ def get_judge_contact(judge_id: int, client: SpeechWireClient) -> Dict:
 
     return _fetch_and_parse(
         client,
-        f"https://manage.speechwire.com/tabroom/view-judge.php?judgeid={judge_id}",
+        "https://manage.speechwire.com/tabroom/view-judge.php",
         _parse,
         default={
             "judge_id": judge_id,
@@ -59,27 +58,29 @@ def get_judge_contact(judge_id: int, client: SpeechWireClient) -> Dict:
             "phone": None,
         },
         context=f"judge contact for {judge_id}",
+        params={"judgeid": str(judge_id)},
     )
 
 
-def get_judge_availability(judge_id: int, client: SpeechWireClient) -> List[Dict]:
+def get_judge_availability(judge_id: int, client: SpeechWireClient) -> list[dict]:
     """Fetch and parse a judge's availability from their edit page."""
     return _fetch_and_parse(
         client,
-        f"https://manage.speechwire.com/tabroom/judges-edit.php?judgeid={judge_id}",
+        "https://manage.speechwire.com/tabroom/judges-edit.php",
         parse_availability_from_edit_html,
         default=[],
         context=f"availability for {judge_id}",
+        params={"judgeid": str(judge_id)},
     )
 
 
-def get_judge_school(judge_id: int, client: SpeechWireClient) -> Dict:
+def get_judge_school(judge_id: int, client: SpeechWireClient) -> dict:
     """Fetch judge edit page and return school association.
 
     Returns a dict with judge_id, school, and team_id.
     """
 
-    def _parse(html: str) -> Dict:
+    def _parse(html: str) -> dict:
         parsed = parse_school_from_edit_html(html)
         return {
             "judge_id": judge_id,
@@ -89,7 +90,7 @@ def get_judge_school(judge_id: int, client: SpeechWireClient) -> Dict:
 
     return _fetch_and_parse(
         client,
-        f"https://manage.speechwire.com/tabroom/judges-edit.php?judgeid={judge_id}",
+        "https://manage.speechwire.com/tabroom/judges-edit.php",
         _parse,
         default={
             "judge_id": judge_id,
@@ -97,6 +98,7 @@ def get_judge_school(judge_id: int, client: SpeechWireClient) -> Dict:
             "team_id": None,
         },
         context=f"school for {judge_id}",
+        params={"judgeid": str(judge_id)},
     )
 
 
@@ -110,7 +112,7 @@ def add_judge(
     is_coach: bool = False,
     is_priority: bool = False,
     available_slots: list[int] | None = None,
-) -> Dict:
+) -> dict:
     """Add a new judge to the active tournament.
 
     Parameters
@@ -185,7 +187,7 @@ def add_judge(
     )
 
 
-def get_judge_types(client: SpeechWireClient) -> List[Dict]:
+def get_judge_types(client: SpeechWireClient) -> list[dict]:
     """Fetch and parse the judge types for the active tournament.
 
     Parameters

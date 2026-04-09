@@ -209,7 +209,7 @@ def test_parse_round_schematic_happy_path():
     assert section_a["competitors"][0]["record"] == "2-0"
     assert section_a["competitors"][1]["competitor_id"] == 184
     assert section_a["competitors"][1]["name"] == CHARLIE_YOUNG
-    assert section_a["competitors"][1]["side"] == "Neg"
+    assert section_a["competitors"][1]["side"] == "NEG"
     assert section_a["competitors"][1]["record"] == "1-1"
     
     # Section B
@@ -225,7 +225,7 @@ def test_parse_round_schematic_happy_path():
     assert section_b["competitors"][0]["record"] == "1-1"
     assert section_b["competitors"][1]["competitor_id"] == 186
     assert section_b["competitors"][1]["name"] == WILL_BAILEY
-    assert section_b["competitors"][1]["side"] == "Neg"
+    assert section_b["competitors"][1]["side"] == "NEG"
     assert section_b["competitors"][1]["record"] == "0-2"
 
 

@@ -31,11 +31,18 @@ def get_tab_sheet(grouping_id: int, client: SpeechWireClient) -> dict:
         and ``competitors`` with round-by-round outcomes, speaker
         scores, and placements.
     """
-    url = f"{_BASE}?groupingid={grouping_id}&Submit=View+tab+sheet&sortby=&divisionrestrict="
+    url = f"{_BASE}"
+    params = {
+        "groupingid": str(grouping_id),
+        "Submit": "View tab sheet",
+        "sortby": "",
+        "divisionrestrict": "",
+    }
     return _fetch_and_parse(
         client,
         url,
         parse_tab_sheet_from_html,
         default={},
         context=f"tab sheet for grouping {grouping_id}",
+        params=params,
     )

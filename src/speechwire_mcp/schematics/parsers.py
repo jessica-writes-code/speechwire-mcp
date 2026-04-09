@@ -8,6 +8,41 @@ from speechwire_mcp.parsing_helpers import make_soup, td_safe, extract_int_query
 logger = logging.getLogger(__name__)
 
 
+def _parse_judge_from_link(link) -> dict | None:
+    """Extract judge info from an anchor tag with "Name [N]" format.
+
+    Parameters
+    ----------
+    link : bs4.element.Tag
+        Anchor tag with ``firstjudgeid`` query param.
+
+    Returns
+    -------
+    dict | None
+        ``{"judge_id": int, "name": str, "rounds_judged": int | None}``
+        or None if judge_id cannot be extracted.
+    """
+    judge_id = extract_int_query_param(link, "firstjudgeid")
+    if judge_id is None:
+        return None
+    text = link.get_text(strip=True)
+    name = None
+    rounds_judged = None
+    if "[" in text and "]" in text:
+        parts = text.rsplit("[", 1)
+        name = parts[0].strip()
+        try:
+            rounds_judged = int(parts[1].rstrip("]").strip())
+        except ValueError:
+            pass
+    else:
+        name = text
+    return {"judge_id": judge_id, "name": name, "rounds_judged": rounds_judged}
+
+
+_SIDE_RE = re.compile(r"\((?:aff|neg)\)", re.IGNORECASE)
+
+
 def parse_schematic_events_html(html: str) -> list[dict]:
     """Parse schematic events from the schematic viewer page.
 
@@ -109,28 +144,9 @@ def parse_round_schematic_html(html: str) -> dict:
     unused_cell = header_tds[1]
     unused_links = unused_cell.find_all("a", href=lambda h: h and "firstjudgeid=" in h)
     for link in unused_links:
-        judge_id = extract_int_query_param(link, "firstjudgeid")
-        if judge_id is None:
-            continue
-        # Parse "Name [N]" format
-        text = link.get_text(strip=True)
-        name = None
-        rounds_judged = None
-        if "[" in text and "]" in text:
-            parts = text.rsplit("[", 1)
-            name = parts[0].strip()
-            try:
-                rounds_judged = int(parts[1].rstrip("]").strip())
-            except ValueError:
-                pass
-        else:
-            name = text
-
-        unused_judges.append({
-            "judge_id": judge_id,
-            "name": name,
-            "rounds_judged": rounds_judged,
-        })
+        judge = _parse_judge_from_link(link)
+        if judge:
+            unused_judges.append(judge)
 
     # Skip row 1 (column labels)
     # Parse data rows (rows 2+)
@@ -156,25 +172,7 @@ def parse_round_schematic_html(html: str) -> dict:
         if judge_td:
             judge_link = judge_td.find("a", href=lambda h: h and "firstjudgeid=" in h)
             if judge_link:
-                judge_id = extract_int_query_param(judge_link, "firstjudgeid")
-                text = judge_link.get_text(strip=True)
-                name = None
-                rounds_judged = None
-                if "[" in text and "]" in text:
-                    parts = text.rsplit("[", 1)
-                    name = parts[0].strip()
-                    try:
-                        rounds_judged = int(parts[1].rstrip("]").strip())
-                    except ValueError:
-                        pass
-                else:
-                    name = text
-                if judge_id is not None:
-                    judge = {
-                        "judge_id": judge_id,
-                        "name": name,
-                        "rounds_judged": rounds_judged,
-                    }
+                judge = _parse_judge_from_link(judge_link)
 
         # Cell 2: room
         room_td = td_safe(tds, 2)
@@ -205,15 +203,13 @@ def parse_round_schematic_html(html: str) -> dict:
             side = None
             record = None
 
-            # Extract side (AFF or Neg)
-            if "(AFF)" in text or "(Aff)" in text:
-                side = "AFF"
-            elif "(NEG)" in text or "(Neg)" in text:
-                side = "Neg"
+            # Extract side (AFF or NEG), case-insensitive
+            side_match = _SIDE_RE.search(text)
+            if side_match:
+                side = side_match.group(0)[1:-1].upper()
 
             # Remove side markers to get name and record
-            clean_text = text.replace("(AFF)", "").replace("(Aff)", "")
-            clean_text = clean_text.replace("(NEG)", "").replace("(Neg)", "")
+            clean_text = _SIDE_RE.sub("", text)
 
             # Find record pattern (W-L)
             record_match = re.search(r"\((\d+-\d+)\)", clean_text)

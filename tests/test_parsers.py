@@ -553,10 +553,10 @@ class TestParseAddJudgeResponse:
         result = parse(ADD_JUDGE_FORM_RERENDERED_HTML)
         assert result["success"] is False
 
-    def test_empty_html_assumes_success(self):
+    def test_empty_html_returns_failure(self):
         parse = _import_parse_add_judge_response()
         result = parse("")
-        assert result["success"] is True
+        assert result["success"] is False
         assert result["judge_id"] is None
 
     def test_judge_list_rendered_is_success(self):

@@ -1,4 +1,3 @@
-from typing import Optional, List, Dict
 import logging
 import re
 from bs4 import element
@@ -10,7 +9,7 @@ logger = logging.getLogger(__name__)
 _EMAIL_RE = re.compile(r"[\w\.-]+@[\w\.-]+\.\w+", re.IGNORECASE)
 
 
-def _selected_value(td: Optional[element.Tag], select_name_prefix: str) -> Optional[str]:
+def _selected_value(td: element.Tag | None, select_name_prefix: str) -> str | None:
     """Return the selected <option> value from a <select> inside a <td>."""
     if td is None:
         return None
@@ -21,7 +20,7 @@ def _selected_value(td: Optional[element.Tag], select_name_prefix: str) -> Optio
     return option.get("value") if option else None
 
 
-def parse_judge_list_from_html(html: str) -> List[Dict]:
+def parse_judge_list_from_html(html: str) -> list[dict]:
     """Parse SpeechWire judge dashboard HTML into structured judge records.
 
     The dashboard sometimes marks judges with a ``(Coach)`` indicator next
@@ -39,7 +38,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
     if table is None:
         return []
 
-    records: List[Dict] = []
+    records: list[dict] = []
 
     for tr in table.find_all("tr"):
         if "tableheader" in (tr.get("class") or []):
@@ -50,8 +49,8 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
             continue
 
         # Col 0: Name + judge_id + optional (Coach) indicator
-        name = None
-        judge_id: Optional[int] = None
+        name: str | None = None
+        judge_id: int | None = None
         is_coach = False
         name_td = td_safe(tds, 0)
         if name_td:
@@ -64,8 +63,8 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
                 is_coach = True
 
         # Col 1: Team name + team_id
-        team: Optional[str] = None
-        team_id: Optional[int] = None
+        team: str | None = None
+        team_id: int | None = None
         team_td = td_safe(tds, 1)
         if team_td:
             team_link = team_td.find("a")
@@ -95,14 +94,14 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
 
         # Col 8: Unavailability text
         unavail_td = td_safe(tds, 8)
-        unavailability: Optional[str] = None
+        unavailability: str | None = None
         if unavail_td:
             text = unavail_td.get_text(strip=True)
             if text:
                 unavailability = text
 
         # Col 10: Blocks (e.g. "GROUPING: Varsity Policy Debate")
-        blocks: List[str] = []
+        blocks: list[str] = []
         blocks_td = td_safe(tds, 10)
         if blocks_td:
             raw = blocks_td.decode_contents().strip()
@@ -128,7 +127,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
     return records
 
 
-def parse_availability_from_edit_html(html: str) -> List[Dict]:
+def parse_availability_from_edit_html(html: str) -> list[dict]:
     """Parse the 'Availability by timeslot' table from a judge edit HTML page."""
     soup = make_soup(html)
 
@@ -145,13 +144,13 @@ def parse_availability_from_edit_html(html: str) -> List[Dict]:
         return []
 
     header = table.find("tr", class_="tableheader")
-    labels: List[str] = []
+    labels: list[str] = []
     if header:
         header_tds = header.find_all("td")
         labels = [td.get_text(" ", strip=True) for td in header_tds]
 
     inputs = table.find_all("input", {"type": "checkbox"})
-    availability: List[Dict] = []
+    availability: list[dict] = []
     idx = 0
     for inp in inputs:
         name = inp.get("name", "") or ""
@@ -170,7 +169,7 @@ def parse_availability_from_edit_html(html: str) -> List[Dict]:
     return availability
 
 
-def parse_phone_from_edit_html(html: str) -> Optional[str]:
+def parse_phone_from_edit_html(html: str) -> str | None:
     """Extract the cell phone text from a judge edit HTML page."""
     if not html:
         return None
@@ -180,14 +179,14 @@ def parse_phone_from_edit_html(html: str) -> Optional[str]:
     return m.group(1).strip()
 
 
-def parse_judge_edit_contact_html(html: str) -> Dict:
+def parse_judge_edit_contact_html(html: str) -> dict:
     """Extract email and phone from a judge edit page HTML.
 
     Returns dict with keys: email, phone.
     """
     soup = make_soup(html)
 
-    def _valid_email(val: Optional[str]) -> Optional[str]:
+    def _valid_email(val: str | None) -> str | None:
         if not val:
             return None
         val = val.strip()
@@ -196,7 +195,7 @@ def parse_judge_edit_contact_html(html: str) -> Dict:
         return val.lower()
 
     # 1) Prefer explicit judgeemail input value
-    email_val: Optional[str] = None
+    email_val: str | None = None
     email_input = soup.find("input", {"id": "judgeemail"}) or soup.find(
         "input", {"name": "judgeemail"}
     )
@@ -224,7 +223,7 @@ def parse_judge_edit_contact_html(html: str) -> Dict:
     }
 
 
-def parse_school_from_edit_html(html: str) -> Dict:
+def parse_school_from_edit_html(html: str) -> dict:
     """Extract the judge's school (team) association from a judge edit page.
 
     The school is determined by the selected ``<option>`` in the
@@ -257,7 +256,7 @@ def parse_school_from_edit_html(html: str) -> Dict:
     return {"school": school, "team_id": team_id}
 
 
-def parse_add_judge_response(html: str) -> Dict:
+def parse_add_judge_response(html: str) -> dict:
     """Parse the response from a judge-creation POST.
 
     Determines whether the judge was successfully created by looking for
@@ -278,7 +277,7 @@ def parse_add_judge_response(html: str) -> Dict:
 
     # --- error signals ---
     mode_input = soup.find("input", {"name": "mode", "value": "addjudge"})
-    error_texts: List[str] = []
+    error_texts: list[str] = []
     for tag in soup.find_all(["p", "div"]):
         text = tag.get_text(" ", strip=True)
         if text and "error" in text.lower():
@@ -288,7 +287,7 @@ def parse_add_judge_response(html: str) -> Dict:
     has_error = bool(mode_input) or bool(error_texts) or no_judge
 
     # --- success signals ---
-    judge_id: Optional[int] = None
+    judge_id: int | None = None
     success_msg = soup.find("div", class_="successmsg")
 
     # Extract judge_id from hidden input or links
@@ -312,8 +311,8 @@ def parse_add_judge_response(html: str) -> Dict:
         success_msg is not None
         or judge_id is not None
         or "judge added" in body_text
-        or "added" in body_text
-        or "saved" in body_text
+        or "judge saved" in body_text
+        or "successfully" in body_text
     )
 
     # --- priority: error overrides success ---
@@ -327,11 +326,11 @@ def parse_add_judge_response(html: str) -> Dict:
     if has_success:
         return {"success": True, "judge_id": judge_id, "error": None}
 
-    # ambiguous 200 — assume success
-    return {"success": True, "judge_id": None, "error": None}
+    # ambiguous 200 — no clear success or error signals
+    return {"success": False, "judge_id": None, "error": "ambiguous response (no success signal)"}
 
 
-def parse_judge_types_from_html(html: str) -> List[Dict]:
+def parse_judge_types_from_html(html: str) -> list[dict]:
     """Parse the judge types list page into structured records.
 
     Parameters
@@ -350,7 +349,7 @@ def parse_judge_types_from_html(html: str) -> List[Dict]:
     if table is None:
         return []
 
-    records: List[Dict] = []
+    records: list[dict] = []
 
     for tr in table.find_all("tr"):
         if "tableheader" in (tr.get("class") or []):
@@ -362,8 +361,8 @@ def parse_judge_types_from_html(html: str) -> List[Dict]:
 
         # Col 0: judge type name + judge_type_id from link
         name_td = td_safe(tds, 0)
-        judge_type_id: Optional[int] = None
-        judge_type: Optional[str] = None
+        judge_type_id: int | None = None
+        judge_type: str | None = None
         if name_td:
             link = name_td.find("a")
             if link:
@@ -375,7 +374,7 @@ def parse_judge_types_from_html(html: str) -> List[Dict]:
 
         # Col 1: comma-separated grouping codes
         groupings_td = td_safe(tds, 1)
-        groupings: List[str] = []
+        groupings: list[str] = []
         if groupings_td:
             raw = groupings_td.get_text(strip=True)
             groupings = [g.strip() for g in raw.split(",") if g.strip()]
