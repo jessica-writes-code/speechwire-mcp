@@ -24,7 +24,7 @@ except ImportError:
 # HTML fixtures — account list
 # ---------------------------------------------------------------------------
 
-SINGLE_ACCOUNT_HTML = """<!DOCTYPE html>
+SINGLE_ACCOUNT_HTML = f"""<!DOCTYPE html>
 <html>
 <head><title>Select Account</title></head>
 <body>
@@ -33,7 +33,7 @@ SINGLE_ACCOUNT_HTML = """<!DOCTYPE html>
     <tr class="tableheader"><td>Account</td></tr>
     <tr>
       <td>
-        <a href="c-account-select.php?selectaccountid=12345">Hartsfield Landing School</a>
+        <a href="c-account-select.php?selectaccountid=12345">{HARTSFIELD_LANDING}</a>
       </td>
     </tr>
   </table>
@@ -41,7 +41,7 @@ SINGLE_ACCOUNT_HTML = """<!DOCTYPE html>
 </html>
 """
 
-MULTIPLE_ACCOUNTS_HTML = """<!DOCTYPE html>
+MULTIPLE_ACCOUNTS_HTML = f"""<!DOCTYPE html>
 <html>
 <head><title>Select Account</title></head>
 <body>
@@ -50,17 +50,17 @@ MULTIPLE_ACCOUNTS_HTML = """<!DOCTYPE html>
     <tr class="tableheader"><td>Account</td></tr>
     <tr>
       <td>
-        <a href="c-account-select.php?selectaccountid=12345">Hartsfield Landing School</a>
+        <a href="c-account-select.php?selectaccountid=12345">{HARTSFIELD_LANDING}</a>
       </td>
     </tr>
     <tr>
       <td>
-        <a href="c-account-select.php?selectaccountid=67890">Kennison Academy</a>
+        <a href="c-account-select.php?selectaccountid=67890">{KENNISON_ACADEMY}</a>
       </td>
     </tr>
     <tr>
       <td>
-        <a href="c-account-select.php?selectaccountid=11111">Chesapeake Prep</a>
+        <a href="c-account-select.php?selectaccountid=11111">{CHESAPEAKE_PREP}</a>
       </td>
     </tr>
   </table>

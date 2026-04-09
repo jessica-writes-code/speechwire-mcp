@@ -1,11 +1,26 @@
 import pytest
 
 from fake_data import (
-    DONNA_MOSS,
-    MANCHESTER_PREP,
-    ROSSLYN_ACADEMY,
-    POTOMAC_ACADEMY,
+    ABBEY_BARTLET,
+    CHARLIE_YOUNG,
     CHESAPEAKE_PREP,
+    CJ_CREGG,
+    DONNA_MOSS,
+    HOLLIS_ACADEMY,
+    JED_BARTLET,
+    JOSH_LYMAN,
+    LEO_MCGARRY,
+    MANCHESTER_PREP,
+    NASHUA_PREP,
+    OLIVER_BABISH,
+    POTOMAC_ACADEMY,
+    ROSSLYN_ACADEMY,
+    SAGAMORE_PREP,
+    SAM_SEABORN,
+    SANTOS_ACADEMY,
+    STACKHOUSE_ACADEMY,
+    TOBY_ZIEGLER,
+    WILL_BAILEY,
     email_for,
 )
 from speechwire_mcp.judges.parsers import (
@@ -17,7 +32,7 @@ from speechwire_mcp.judges.parsers import (
 )
 
 
-SAMPLE_EMAIL_HTML = """<!DOCTYPE html>
+SAMPLE_EMAIL_HTML = f"""<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8"/>
@@ -28,7 +43,7 @@ SAMPLE_EMAIL_HTML = """<!DOCTYPE html>
     <form id="form1" name="form1" method="post" action="judges-edit.php">
       <p class='sectiontitle'>General information</p>
       <p>
-        Name: <input class='swtext' id='judgename' type='text' name='judgename' value="Test Judge" size='30' maxlength='50'>
+        Name: <input class='swtext' id='judgename' type='text' name='judgename' value="{SAM_SEABORN}" size='30' maxlength='50'>
         Email address: <input class='swtext' id='judgeemail' type='text' name='judgeemail' value="test.user@example.org" size='30' maxlength='50'>
       </p>
     </form>
@@ -76,8 +91,8 @@ def test_parse_availability_basic():
 
 def _make_judge_row(
     judge_id=1,
-    name="Test Judge",
-    team="Test School",
+    name=SAM_SEABORN,
+    team=NASHUA_PREP,
     teamid=10,
     active_val="0",
     clean_val="0",
@@ -134,8 +149,8 @@ def test_judge_list_happy_path():
     html = _wrap_table(
         _make_judge_row(
             judge_id=42,
-            name="Jane Doe",
-            team="Chesapeake Prep",
+            name=TOBY_ZIEGLER,
+            team=CHESAPEAKE_PREP,
             teamid=7,
             active_val="0",
             clean_val="1",
@@ -149,7 +164,7 @@ def test_judge_list_happy_path():
     assert len(records) == 1
     r = records[0]
     assert r["judge_id"] == 42
-    assert r["name"] == "Jane Doe"
+    assert r["name"] == TOBY_ZIEGLER
     assert r["team"] == CHESAPEAKE_PREP
     assert r["team_id"] == 7
     assert r["is_active"] is True
@@ -257,7 +272,7 @@ def test_judge_list_minimal_row():
 
 def test_judge_list_coach_true():
     """Judge with (Coach) indicator should have is_coach=True."""
-    html = _wrap_table(_make_judge_row(judge_id=102, name="Donna Moss", coach=True))
+    html = _wrap_table(_make_judge_row(judge_id=102, name=DONNA_MOSS, coach=True))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_coach"] is True
     assert r["name"] == DONNA_MOSS
@@ -265,18 +280,18 @@ def test_judge_list_coach_true():
 
 def test_judge_list_coach_false():
     """Judge without (Coach) indicator should have is_coach=False."""
-    html = _wrap_table(_make_judge_row(judge_id=50, name="Regular Judge", coach=False))
+    html = _wrap_table(_make_judge_row(judge_id=50, name=CJ_CREGG, coach=False))
     r = parse_judge_list_from_html(html)[0]
     assert r["is_coach"] is False
-    assert r["name"] == "Regular Judge"
+    assert r["name"] == CJ_CREGG
 
 
 def test_judge_list_mixed_coach_and_non_coach():
     """Table with both coach and non-coach judges."""
     html = _wrap_table(
-        _make_judge_row(judge_id=1, name="Coach Person", coach=True),
-        _make_judge_row(judge_id=2, name="Volunteer Judge", coach=False),
-        _make_judge_row(judge_id=3, name="Another Coach", coach=True),
+        _make_judge_row(judge_id=1, name=CHARLIE_YOUNG, coach=True),
+        _make_judge_row(judge_id=2, name=ABBEY_BARTLET, coach=False),
+        _make_judge_row(judge_id=3, name=OLIVER_BABISH, coach=True),
     )
     records = parse_judge_list_from_html(html)
     assert len(records) == 3
@@ -287,10 +302,10 @@ def test_judge_list_mixed_coach_and_non_coach():
 
 def test_judge_list_backward_compat():
     """Existing judge_id/name fields must remain present and correct."""
-    html = _wrap_table(_make_judge_row(judge_id=33, name="Old Name"))
+    html = _wrap_table(_make_judge_row(judge_id=33, name=WILL_BAILEY))
     r = parse_judge_list_from_html(html)[0]
     assert "judge_id" in r and r["judge_id"] == 33
-    assert "name" in r and r["name"] == "Old Name"
+    assert "name" in r and r["name"] == WILL_BAILEY
 
 
 def test_judge_list_empty_table():
@@ -324,7 +339,7 @@ def test_judge_list_blocks_multiple():
 
 
 def test_judge_list_blocks_single():
-    html = _wrap_table(_make_judge_row(blocks=["TEAM: Chesapeake Prep"]))
+    html = _wrap_table(_make_judge_row(blocks=[f"TEAM: {CHESAPEAKE_PREP}"]))
     r = parse_judge_list_from_html(html)[0]
     assert r["blocks"] == [f"TEAM: {CHESAPEAKE_PREP}"]
 
@@ -339,21 +354,21 @@ def test_judge_list_blocks_empty():
 # School (team association) parsing tests
 # ---------------------------------------------------------------------------
 
-SAMPLE_SCHOOL_HTML = """<!DOCTYPE html>
+SAMPLE_SCHOOL_HTML = f"""<!DOCTYPE html>
 <html><head><title>SpeechWire</title></head>
 <body>
 <p class='pagetitle'>Edit judge</p>
 <form id="form1" name="form1" method="post" action="judges-edit.php">
 <p class='sectiontitle'>General information</p>
 <p>Name: <input class='swtext' id='judgename' type='text' name='judgename'
-   value="Josh Lyman" size='30' maxlength='50'>
+   value="{JOSH_LYMAN}" size='30' maxlength='50'>
 Email address: <input class='swtext' id='judgeemail' type='text' name='judgeemail'
-   value="josh.lyman@example.com" size='30' maxlength='50'></p>
+   value="{email_for(JOSH_LYMAN)}" size='30' maxlength='50'></p>
 <p>Team: <select id='teamid' name='teamid'>
-  <option value='69'>Potomac Academy</option>
-  <option selected value='24'>Manchester Prep</option>
-  <option value='36'>Sagamore Prep</option>
-  <option value='85'>Rosslyn Academy</option>
+  <option value='69'>{POTOMAC_ACADEMY}</option>
+  <option selected value='24'>{MANCHESTER_PREP}</option>
+  <option value='36'>{SAGAMORE_PREP}</option>
+  <option value='85'>{ROSSLYN_ACADEMY}</option>
 </select></p>
 </form>
 </body></html>
@@ -367,10 +382,10 @@ def test_parse_school_happy_path():
 
 
 def test_parse_school_first_option_selected():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option selected value='69'>Potomac Academy</option>
-      <option value='24'>Manchester Prep</option>
+      <option selected value='69'>{POTOMAC_ACADEMY}</option>
+      <option value='24'>{MANCHESTER_PREP}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
@@ -379,11 +394,11 @@ def test_parse_school_first_option_selected():
 
 
 def test_parse_school_last_option_selected():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option value='69'>Potomac Academy</option>
-      <option value='24'>Manchester Prep</option>
-      <option selected value='85'>Rosslyn Academy</option>
+      <option value='69'>{POTOMAC_ACADEMY}</option>
+      <option value='24'>{MANCHESTER_PREP}</option>
+      <option selected value='85'>{ROSSLYN_ACADEMY}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
@@ -399,10 +414,10 @@ def test_parse_school_no_select():
 
 
 def test_parse_school_no_selected_option():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option value='69'>Potomac Academy</option>
-      <option value='24'>Manchester Prep</option>
+      <option value='69'>{POTOMAC_ACADEMY}</option>
+      <option value='24'>{MANCHESTER_PREP}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
@@ -418,25 +433,25 @@ def test_parse_school_empty_html():
 
 def test_parse_school_name_attribute_fallback():
     """Falls back to name='teamid' when id is missing."""
-    html = """
+    html = f"""
     <select name='teamid'>
-      <option value='10'>Fallback School</option>
-      <option selected value='20'>Selected School</option>
+      <option value='10'>{HOLLIS_ACADEMY}</option>
+      <option selected value='20'>{STACKHOUSE_ACADEMY}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
-    assert result["school"] == "Selected School"
+    assert result["school"] == STACKHOUSE_ACADEMY
     assert result["team_id"] == 20
 
 
 def test_parse_school_non_numeric_value():
-    html = """
+    html = f"""
     <select id='teamid' name='teamid'>
-      <option selected value='abc'>Some School</option>
+      <option selected value='abc'>{SANTOS_ACADEMY}</option>
     </select>
     """
     result = parse_school_from_edit_html(html)
-    assert result["school"] == "Some School"
+    assert result["school"] == SANTOS_ACADEMY
     assert result["team_id"] is None
 
 
@@ -454,14 +469,14 @@ def _import_parse_add_judge_response():
         pytest.skip("parse_add_judge_response not implemented yet")
 
 
-ADD_JUDGE_SUCCESS_WITH_ID_HTML = """<!DOCTYPE html>
+ADD_JUDGE_SUCCESS_WITH_ID_HTML = f"""<!DOCTYPE html>
 <html><body>
   <p class='pagetitle'>Judge dashboard</p>
   <table class='dd'>
     <tr class='tableheader'><td>Name</td><td>Team</td></tr>
     <tr>
-      <td><a href='view-judge.php?judgeid=12345'>Jed Bartlet</a></td>
-      <td>Manchester Prep</td>
+      <td><a href='view-judge.php?judgeid=12345'>{JED_BARTLET}</a></td>
+      <td>{MANCHESTER_PREP}</td>
     </tr>
   </table>
 </body></html>
@@ -493,18 +508,18 @@ ADD_JUDGE_FORM_RERENDERED_HTML = """<!DOCTYPE html>
 </body></html>
 """
 
-ADD_JUDGE_JUDGE_LIST_HTML = """<!DOCTYPE html>
+ADD_JUDGE_JUDGE_LIST_HTML = f"""<!DOCTYPE html>
 <html><body>
   <p class='pagetitle'>Judge dashboard</p>
   <table class='dd'>
     <tr class='tableheader'><td>Name</td><td>Team</td></tr>
     <tr>
-      <td><a href='view-judge.php?judgeid=555'>Leo McGarry</a></td>
-      <td>Rosslyn Academy</td>
+      <td><a href='view-judge.php?judgeid=555'>{LEO_MCGARRY}</a></td>
+      <td>{ROSSLYN_ACADEMY}</td>
     </tr>
     <tr>
-      <td><a href='view-judge.php?judgeid=556'>Josh Lyman</a></td>
-      <td>Potomac Academy</td>
+      <td><a href='view-judge.php?judgeid=556'>{JOSH_LYMAN}</a></td>
+      <td>{POTOMAC_ACADEMY}</td>
     </tr>
   </table>
 </body></html>

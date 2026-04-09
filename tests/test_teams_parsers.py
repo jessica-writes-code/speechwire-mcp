@@ -7,27 +7,47 @@ from speechwire_mcp.teams.parsers import (
 from fake_data import (
     ABBEY_BARTLET,
     ANDREA_WYATT,
+    CJ_CREGG,
     ANNABETH_SCHOTT,
+    ARNOLD_VINICK,
+    BAILEY_HS,
     BARTLET_MIDDLE,
+    BOB_RUSSELL,
+    BRAM_HOWARD,
     BRUNO_GIANELLI,
     CREGG_MS,
+    DEBBIE_FIDERER,
+    DONNA_MOSS,
+    ELLIE_BARTLET,
+    GLEN_WALKEN,
+    HAFFLEY_HS,
     HOLLIS_ACADEMY,
     JOSH_LYMAN,
     KATE_HARPER,
+    LOU_THORNTON,
     LYMAN_HS,
+    LYMAN_MS,
     MALLORY_OBRIEN,
     MANCHESTER_PREP,
+    MANDY_HAMPTON,
+    MARGARET_HOOPER,
     MATT_SANTOS,
     NANCY_MCNALLY,
     NASHUA_PREP,
     POTOMAC_ACADEMY,
+    RITCHIE_HS,
+    RONNA_BECKMAN,
     RON_BUTTERFIELD,
+    RUSSELL_HS,
     SAGAMORE_PREP,
     SAM_SEABORN,
+    SEABORN_HS,
     SANTOS_ACADEMY,
+    SANTOS_HS,
     STACKHOUSE_ACADEMY,
     TOBY_ZIEGLER,
     VINICK_ACADEMY,
+    WALKEN_HS,
     ZOEY_BARTLET,
 )
 
@@ -36,12 +56,12 @@ from fake_data import (
 # Team List Parser Tests
 # ---------------------------------------------------------------------------
 
-BASIC_TEAM_LIST_HTML = """
+BASIC_TEAM_LIST_HTML = f"""
 <table class="dd">
 <tr class="tableheader"><td>Team name</td><td>Code</td><td>Invited?</td><td>Attending?</td><td>Checked in?(click to toggle)</td><td>Entries</td><td>Judges</td><td>Results</td><td>UDL member?</td></tr>
-<tr><td><a href="teams-manage.php?teamid=69">Potomac Academy</a></td><td></td><td>Yes</td><td>Yes</td><td><a href="teams-list.php?mode=updatecheckin&amp;setcheckin=0&amp;checkinteamid=69">YES</a></td><td><input type="button" value="Entries" /></td><td><input type="button" value="Judges" /></td><td><input type="button" value="Results" /></td><td>Yes</td></tr>
-<tr><td><a href="teams-manage.php?teamid=22">Nashua Prep</a></td><td>AD</td><td>Yes</td><td>No</td><td>NO</td><td><input type="button" value="Entries" /></td><td><input type="button" value="Judges" /></td><td><input type="button" value="Results" /></td><td>No</td></tr>
-<tr><td><a href="teams-manage.php?teamid=105">Hollis Academy</a></td><td>BCC</td><td>Yes</td><td>Yes</td><td><a href="teams-list.php?mode=updatecheckin&amp;setcheckin=0&amp;checkinteamid=105">YES</a></td><td><input type="button" value="Entries" /></td><td><input type="button" value="Judges" /></td><td><input type="button" value="Results" /></td><td>Yes</td></tr>
+<tr><td><a href="teams-manage.php?teamid=69">{POTOMAC_ACADEMY}</a></td><td></td><td>Yes</td><td>Yes</td><td><a href="teams-list.php?mode=updatecheckin&amp;setcheckin=0&amp;checkinteamid=69">YES</a></td><td><input type="button" value="Entries" /></td><td><input type="button" value="Judges" /></td><td><input type="button" value="Results" /></td><td>Yes</td></tr>
+<tr><td><a href="teams-manage.php?teamid=22">{NASHUA_PREP}</a></td><td>AD</td><td>Yes</td><td>No</td><td>NO</td><td><input type="button" value="Entries" /></td><td><input type="button" value="Judges" /></td><td><input type="button" value="Results" /></td><td>No</td></tr>
+<tr><td><a href="teams-manage.php?teamid=105">{HOLLIS_ACADEMY}</a></td><td>BCC</td><td>Yes</td><td>Yes</td><td><a href="teams-list.php?mode=updatecheckin&amp;setcheckin=0&amp;checkinteamid=105">YES</a></td><td><input type="button" value="Entries" /></td><td><input type="button" value="Judges" /></td><td><input type="button" value="Results" /></td><td>Yes</td></tr>
 </table>
 """
 
@@ -204,22 +224,22 @@ def test_parse_team_list_missing_team_id_link():
 # Team Entries Parser Tests
 # ---------------------------------------------------------------------------
 
-BASIC_ENTRIES_HTML = """
+BASIC_ENTRIES_HTML = f"""
 <form name="form1" action="teams-entries.php">
 <input type="hidden" name="mode" value="update" />
 <input type="hidden" name="teamid" value="69" />
 <div class="sectiontitle">Policy Debate (Varsity/JV)</div>
 <div>
 Potomac Aca AyCl:
-<select name="oldcompinput[88][1][1]"><option value="804093" selected="selected">Abbey Bartlet</option><option value="797976">Zoey Bartlet</option></select>
-<select name="oldcompinput[88][1][2]"><option value="804093">Abbey Bartlet</option><option value="797976" selected="selected">Zoey Bartlet</option></select>
+<select name="oldcompinput[88][1][1]"><option value="804093" selected="selected">{ABBEY_BARTLET}</option><option value="797976">{ZOEY_BARTLET}</option></select>
+<select name="oldcompinput[88][1][2]"><option value="804093">{ABBEY_BARTLET}</option><option value="797976" selected="selected">{ZOEY_BARTLET}</option></select>
 <select name="olddivinput[88][1]"><option value="1" selected="selected">Varsity</option><option value="3">JV</option></select>
 <select name="oldcompdrop[88][1]"><option value="0" selected="selected"></option><option value="1">Drop</option></select>
 </div>
 <div>
 Potomac Aca IsAd:
-<select name="oldcompinput[88][2][1]"><option value="804096" selected="selected">Annabeth Schott</option></select>
-<select name="oldcompinput[88][2][2]"><option value="804097" selected="selected">Nancy McNally</option></select>
+<select name="oldcompinput[88][2][1]"><option value="804096" selected="selected">{ANNABETH_SCHOTT}</option></select>
+<select name="oldcompinput[88][2][2]"><option value="804097" selected="selected">{NANCY_MCNALLY}</option></select>
 <select name="olddivinput[88][2]"><option value="1" selected="selected">Varsity</option></select>
 <select name="oldcompdrop[88][2]"><option value="0" selected="selected"></option><option value="1">Drop</option></select>
 </div>
@@ -267,20 +287,20 @@ def test_parse_team_entries_basic():
 
 def test_parse_team_entries_multiple_events():
     """Test entries from different events."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Lincoln-Douglas Debate (Varsity)</div>
     <div>
     School ABC Jo:
-    <select name="oldcompinput[50][1][1]"><option value="100" selected="selected">John Doe</option></select>
+    <select name="oldcompinput[50][1][1]"><option value="100" selected="selected">{CJ_CREGG}</option></select>
     <select name="olddivinput[50][1]"><option value="1" selected="selected">Varsity</option></select>
     <select name="oldcompdrop[50][1]"><option value="0" selected="selected"></option></select>
     </div>
     <div class="sectiontitle">Original Oratory (Open)</div>
     <div>
     School ABC Sa:
-    <select name="oldcompinput[60][1][1]"><option value="200" selected="selected">Debbie Fiderer</option></select>
+    <select name="oldcompinput[60][1][1]"><option value="200" selected="selected">{DEBBIE_FIDERER}</option></select>
     <select name="olddivinput[60][1]"><option value="2" selected="selected">Open</option></select>
     <select name="oldcompdrop[60][1]"><option value="0" selected="selected"></option></select>
     </div>
@@ -296,13 +316,13 @@ def test_parse_team_entries_multiple_events():
 
 def test_parse_team_entries_dropped():
     """Test that compdrop value of '1' sets is_dropped to True."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Congressional Debate (Varsity)</div>
     <div>
     School XYZ Ma:
-    <select name="oldcompinput[70][1][1]"><option value="300" selected="selected">Margaret Hooper</option></select>
+    <select name="oldcompinput[70][1][1]"><option value="300" selected="selected">{MARGARET_HOOPER}</option></select>
     <select name="olddivinput[70][1]"><option value="1" selected="selected">Varsity</option></select>
     <select name="oldcompdrop[70][1]"><option value="1" selected="selected">Drop</option></select>
     </div>
@@ -334,13 +354,13 @@ def test_parse_team_entries_no_form():
 
 def test_parse_team_entries_single_competitor():
     """Test an event with single competitor per entry (not a duo)."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Impromptu Speaking (JV)</div>
     <div>
     School DEF Ka:
-    <select name="oldcompinput[75][1][1]"><option value="400" selected="selected">Andrea Wyatt</option></select>
+    <select name="oldcompinput[75][1][1]"><option value="400" selected="selected">{ANDREA_WYATT}</option></select>
     <select name="olddivinput[75][1]"><option value="3" selected="selected">JV</option></select>
     <select name="oldcompdrop[75][1]"><option value="0" selected="selected"></option></select>
     </div>
@@ -356,14 +376,14 @@ def test_parse_team_entries_single_competitor():
 
 def test_parse_team_entries_entry_code_extraction():
     """Test that entry code (full prefix with team and code) is correctly extracted."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Public Forum Debate (Varsity)</div>
     <div>
-    Seaborn HS AbCd:
-    <select name="oldcompinput[80][1][1]"><option value="500" selected="selected">Ellie Bartlet</option></select>
-    <select name="oldcompinput[80][1][2]"><option value="501" selected="selected">Arnold Vinick</option></select>
+    {SEABORN_HS} AbCd:
+    <select name="oldcompinput[80][1][1]"><option value="500" selected="selected">{ELLIE_BARTLET}</option></select>
+    <select name="oldcompinput[80][1][2]"><option value="501" selected="selected">{ARNOLD_VINICK}</option></select>
     <select name="olddivinput[80][1]"><option value="1" selected="selected">Varsity</option></select>
     <select name="oldcompdrop[80][1]"><option value="0" selected="selected"></option></select>
     </div>
@@ -371,24 +391,24 @@ def test_parse_team_entries_entry_code_extraction():
     """
     entries = parse_team_entries_html(html)
     assert len(entries) == 1
-    assert entries[0]["entry_code"] == "Seaborn HS AbCd"
+    assert entries[0]["entry_code"] == f"{SEABORN_HS} AbCd"
 
 
 def test_parse_team_entries_event_name_from_section_title():
     """Test that event name is correctly associated with entries."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Dramatic Interpretation (Open)</div>
     <div>
-    Lyman MS Em:
-    <select name="oldcompinput[90][1][1]"><option value="600" selected="selected">Mandy Hampton</option></select>
+    {LYMAN_MS} Em:
+    <select name="oldcompinput[90][1][1]"><option value="600" selected="selected">{MANDY_HAMPTON}</option></select>
     <select name="olddivinput[90][1]"><option value="2" selected="selected">Open</option></select>
     <select name="oldcompdrop[90][1]"><option value="0" selected="selected"></option></select>
     </div>
     <div>
-    Lyman MS Li:
-    <select name="oldcompinput[90][2][1]"><option value="601" selected="selected">Bob Russell</option></select>
+    {LYMAN_MS} Li:
+    <select name="oldcompinput[90][2][1]"><option value="601" selected="selected">{BOB_RUSSELL}</option></select>
     <select name="olddivinput[90][2]"><option value="2" selected="selected">Open</option></select>
     <select name="oldcompdrop[90][2]"><option value="0" selected="selected"></option></select>
     </div>
@@ -402,13 +422,13 @@ def test_parse_team_entries_event_name_from_section_title():
 
 def test_parse_team_entries_division_parsing():
     """Test that division text and ID are correctly extracted."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Extemp Speaking (JV)</div>
     <div>
     School GHI No:
-    <select name="oldcompinput[95][1][1]"><option value="700" selected="selected">Glen Walken</option></select>
+    <select name="oldcompinput[95][1][1]"><option value="700" selected="selected">{GLEN_WALKEN}</option></select>
     <select name="olddivinput[95][1]">
         <option value="1">Varsity</option>
         <option value="3" selected="selected">JV</option>
@@ -426,13 +446,13 @@ def test_parse_team_entries_division_parsing():
 
 def test_parse_team_entries_no_division():
     """Test handling of entry without a division select."""
-    html = """
+    html = f"""
     <form name="form1" action="teams-entries.php">
     <input type="hidden" name="teamid" value="10" />
     <div class="sectiontitle">Some Event</div>
     <div>
     School JKL Ol:
-    <select name="oldcompinput[100][1][1]"><option value="800" selected="selected">Lou Thornton</option></select>
+    <select name="oldcompinput[100][1][1]"><option value="800" selected="selected">{LOU_THORNTON}</option></select>
     <select name="oldcompdrop[100][1]"><option value="0" selected="selected"></option></select>
     </div>
     </form>
@@ -448,10 +468,10 @@ def test_parse_team_entries_no_division():
 # Hybrid Entries Parser Tests
 # ---------------------------------------------------------------------------
 
-BASIC_HYBRID_ENTRIES_HTML = """
+BASIC_HYBRID_ENTRIES_HTML = f"""
 <p class='pagetitle'>Hybrid entries</p>
 <p class='sectiontitle'>Current hybrid entries</p>
-<table class='dd'><tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr><tr><td class='dd'>Policy Debate</td><td class='dd'>JV</td><td class='dd'>Josh Lyman (Manchester Prep)<br />Mallory O'Brien (Sagamore Prep)</td><td class='dd'>Hybrid Entries KaDu</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=158'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=158&mode=drop'"></td><td class='dd'>Sagamore Prep<br />Manchester Prep</td></tr><tr class = 'tar'><td class='dd'>Policy Debate</td><td class='dd'>Rookie</td><td class='dd'>Sam Seaborn (Stackhouse Academy)<br />Toby Ziegler (Santos Academy)</td><td class='dd'>Hybrid Entries BrEm</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=162'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=162&mode=drop'"></td><td class='dd'>Stackhouse Academy<br />Santos Academy</td></tr><tr><td class='dd'>Policy Debate</td><td class='dd'>Rookie</td><td class='dd'>Kate Harper (Bartlet Middle School)<br />Matt Santos (Vinick Academy)</td><td class='dd'>Hybrid Entries ScLe</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=164'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=164&mode=drop'"></td><td class='dd'>Bartlet Middle School<br />Vinick Academy</td></tr></table>
+<table class='dd'><tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr><tr><td class='dd'>Policy Debate</td><td class='dd'>JV</td><td class='dd'>{JOSH_LYMAN} ({MANCHESTER_PREP})<br />{MALLORY_OBRIEN} ({SAGAMORE_PREP})</td><td class='dd'>Hybrid Entries KaDu</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=158'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=158&mode=drop'"></td><td class='dd'>{SAGAMORE_PREP}<br />{MANCHESTER_PREP}</td></tr><tr class = 'tar'><td class='dd'>Policy Debate</td><td class='dd'>Rookie</td><td class='dd'>{SAM_SEABORN} ({STACKHOUSE_ACADEMY})<br />{TOBY_ZIEGLER} ({SANTOS_ACADEMY})</td><td class='dd'>Hybrid Entries BrEm</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=162'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=162&mode=drop'"></td><td class='dd'>{STACKHOUSE_ACADEMY}<br />{SANTOS_ACADEMY}</td></tr><tr><td class='dd'>Policy Debate</td><td class='dd'>Rookie</td><td class='dd'>{KATE_HARPER} ({BARTLET_MIDDLE})<br />{MATT_SANTOS} ({VINICK_ACADEMY})</td><td class='dd'>Hybrid Entries ScLe</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=164'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=164&mode=drop'"></td><td class='dd'>{BARTLET_MIDDLE}<br />{VINICK_ACADEMY}</td></tr></table>
 """
 
 
@@ -526,10 +546,10 @@ def test_parse_hybrid_entries_empty_table():
 
 def test_parse_hybrid_entries_single_student():
     """Test entry with only one student (no <br />)."""
-    html = """
+    html = f"""
     <table class='dd'>
     <tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr>
-    <tr><td class='dd'>Impromptu Speaking</td><td class='dd'>Open</td><td class='dd'>Bruno Gianelli (Lyman HS)</td><td class='dd'>Hybrid Entries JoSm</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=200'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=200&mode=drop'"></td><td class='dd'>Lyman HS</td></tr>
+    <tr><td class='dd'>Impromptu Speaking</td><td class='dd'>Open</td><td class='dd'>{BRUNO_GIANELLI} ({LYMAN_HS})</td><td class='dd'>Hybrid Entries JoSm</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=200'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=200&mode=drop'"></td><td class='dd'>{LYMAN_HS}</td></tr>
     </table>
     """
     entries = parse_hybrid_entries_html(html)
@@ -542,16 +562,16 @@ def test_parse_hybrid_entries_single_student():
 
 def test_parse_hybrid_entries_missing_school():
     """Test student without parenthesized school name."""
-    html = """
+    html = f"""
     <table class='dd'>
     <tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr>
-    <tr><td class='dd'>Extemp Speaking</td><td class='dd'>Varsity</td><td class='dd'>Jane Doe<br />Ron Butterfield (Cregg MS)</td><td class='dd'>Hybrid Entries JaBo</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=250'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=250&mode=drop'"></td><td class='dd'>Cregg MS</td></tr>
+    <tr><td class='dd'>Extemp Speaking</td><td class='dd'>Varsity</td><td class='dd'>{DONNA_MOSS}<br />{RON_BUTTERFIELD} ({CREGG_MS})</td><td class='dd'>Hybrid Entries JaBo</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=250'"></td><td class='dd'><input type="button" value="Drop" class="subutton" onClick="window.location='teams-hybrids.php?compid=250&mode=drop'"></td><td class='dd'>{CREGG_MS}</td></tr>
     </table>
     """
     entries = parse_hybrid_entries_html(html)
     assert len(entries) == 1
     assert len(entries[0]["students"]) == 2
-    assert entries[0]["students"][0]["name"] == "Jane Doe"
+    assert entries[0]["students"][0]["name"] == DONNA_MOSS
     assert entries[0]["students"][0]["school"] is None
     assert entries[0]["students"][1]["name"] == RON_BUTTERFIELD
     assert entries[0]["students"][1]["school"] == CREGG_MS
@@ -559,10 +579,10 @@ def test_parse_hybrid_entries_missing_school():
 
 def test_parse_hybrid_entries_no_edit_button():
     """Test row without an Edit button (comp_id should be None)."""
-    html = """
+    html = f"""
     <table class='dd'>
     <tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr>
-    <tr><td class='dd'>Congressional Debate</td><td class='dd'>JV</td><td class='dd'>Ellie Bartlet (Bailey HS)<br />Arnold Vinick (Haffley HS)</td><td class='dd'>Hybrid Entries AlCh</td><td class='dd'></td><td class='dd'><input type="button" value="Drop" /></td><td class='dd'>Bailey HS<br />Haffley HS</td></tr>
+    <tr><td class='dd'>Congressional Debate</td><td class='dd'>JV</td><td class='dd'>{ELLIE_BARTLET} ({BAILEY_HS})<br />{ARNOLD_VINICK} ({HAFFLEY_HS})</td><td class='dd'>Hybrid Entries AlCh</td><td class='dd'></td><td class='dd'><input type="button" value="Drop" /></td><td class='dd'>{BAILEY_HS}<br />{HAFFLEY_HS}</td></tr>
     </table>
     """
     entries = parse_hybrid_entries_html(html)
@@ -574,10 +594,10 @@ def test_parse_hybrid_entries_no_edit_button():
 
 def test_parse_hybrid_entries_empty_division():
     """Test row with empty division cell."""
-    html = """
+    html = f"""
     <table class='dd'>
     <tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr>
-    <tr><td class='dd'>Original Oratory</td><td class='dd'></td><td class='dd'>Ronna Beckman (Ritchie HS)<br />Bram Howard (Walken HS)</td><td class='dd'>Hybrid Entries EmLi</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=300'"></td><td class='dd'><input type="button" value="Drop" /></td><td class='dd'>Ritchie HS<br />Walken HS</td></tr>
+    <tr><td class='dd'>Original Oratory</td><td class='dd'></td><td class='dd'>{RONNA_BECKMAN} ({RITCHIE_HS})<br />{BRAM_HOWARD} ({WALKEN_HS})</td><td class='dd'>Hybrid Entries EmLi</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=300'"></td><td class='dd'><input type="button" value="Drop" /></td><td class='dd'>{RITCHIE_HS}<br />{WALKEN_HS}</td></tr>
     </table>
     """
     entries = parse_hybrid_entries_html(html)
@@ -589,10 +609,10 @@ def test_parse_hybrid_entries_empty_division():
 
 def test_parse_hybrid_entries_empty_team_blocks():
     """Test row with no team blocks."""
-    html = """
+    html = f"""
     <table class='dd'>
     <tr class='tableheader'><td class='dd'>Event</td><td class='dd'>Division</td><td class='dd'>Students</td><td class='dd'>Code</td><td class='dd'>Edit</td><td class='dd'>Drop</td><td class='dd'>Team blocks</td></tr>
-    <tr><td class='dd'>Public Forum Debate</td><td class='dd'>Novice</td><td class='dd'>Glen Walken (Russell HS)<br />Lou Thornton (Santos HS)</td><td class='dd'>Hybrid Entries NoOl</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=350'"></td><td class='dd'><input type="button" value="Drop" /></td><td class='dd'></td></tr>
+    <tr><td class='dd'>Public Forum Debate</td><td class='dd'>Novice</td><td class='dd'>{GLEN_WALKEN} ({RUSSELL_HS})<br />{LOU_THORNTON} ({SANTOS_HS})</td><td class='dd'>Hybrid Entries NoOl</td><td class='dd'><input type="button" value="Edit" class="subutton" onClick="window.location='teams-hybrids-edit.php?compid=350'"></td><td class='dd'><input type="button" value="Drop" /></td><td class='dd'></td></tr>
     </table>
     """
     entries = parse_hybrid_entries_html(html)

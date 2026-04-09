@@ -12,7 +12,13 @@ Tests skip gracefully if the implementation isn't landed yet.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from fake_data import CAPITOL_DEBATE_LEAGUE
+from fake_data import (
+    CAPITOL_DEBATE_ADMIN,
+    CAPITOL_DEBATE_ELEMENTARY,
+    CAPITOL_DEBATE_LEAGUE,
+    JED_BARTLET,
+    LEO_MCGARRY,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -72,25 +78,25 @@ value="" size="16" maxlength="100">  </p>
 </form>
 """
 
-ACCOUNT_SELECT_HTML = """\
+ACCOUNT_SELECT_HTML = f"""\
 <p class='pagetitle'>Select which account to access</p>
 <p>Your login credentials are valid for more than one SpeechWire coach \
 account.</p>
 <p style='font-size: 18px; font-weight: bold;'>\
 <a href='c-account-select.php?selectaccountid=10001'>\
-Leo McGarry at Capitol Debate League Administration</a></p>
+{LEO_MCGARRY} at {CAPITOL_DEBATE_ADMIN}</a></p>
 <p style='font-size: 18px; font-weight: bold;'>\
 <a href='c-account-select.php?selectaccountid=10002'>\
-Leo McGarry at Capitol Debate League Elementary</a></p>
+{LEO_MCGARRY} at {CAPITOL_DEBATE_ELEMENTARY}</a></p>
 """
 
-NORMAL_MANAGE_PAGE_HTML = """\
+NORMAL_MANAGE_PAGE_HTML = f"""\
 <html>
 <head><title>Judge Check-In</title></head>
 <body>
   <table class="dd">
     <tr class="tableheader"><td>Judge</td><td>Status</td></tr>
-    <tr><td>Jane Doe</td><td>Checked In</td></tr>
+    <tr><td>{JED_BARTLET}</td><td>Checked In</td></tr>
   </table>
 </body>
 </html>

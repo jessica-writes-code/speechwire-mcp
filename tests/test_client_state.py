@@ -12,6 +12,7 @@ unimplemented code skip gracefully.
 
 import pytest
 
+from fake_data import HARTSFIELD_LANDING, KENNISON_ACADEMY
 
 
 # ---------------------------------------------------------------------------
@@ -147,8 +148,8 @@ class TestSelectionRequiredException:
     def test_exception_carries_options(self):
         SpeechWireSelectionRequired = _import_selection_required()
         options = [
-            {"account_id": 12345, "name": "Hartsfield Landing School"},
-            {"account_id": 67890, "name": "Kennison Academy"},
+            {"account_id": 12345, "name": HARTSFIELD_LANDING},
+            {"account_id": 67890, "name": KENNISON_ACADEMY},
         ]
         exc = SpeechWireSelectionRequired("Multiple accounts found", options=options)
         assert exc.options == options
