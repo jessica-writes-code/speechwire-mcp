@@ -107,7 +107,7 @@ def parse_judge_list_from_html(html: str) -> List[Dict]:
         if blocks_td:
             raw = blocks_td.decode_contents().strip()
             if raw and raw != "&nbsp;":
-                blocks = [b.strip() for b in raw.split("<br/>") if b.strip()]
+                blocks = [b.strip() for b in re.split(r"<br\s*/?>", raw, flags=re.IGNORECASE) if b.strip()]
 
         records.append(
             {
