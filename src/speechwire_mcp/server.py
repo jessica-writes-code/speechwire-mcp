@@ -704,7 +704,7 @@ def main():
     transport = os.environ.get("SPEECHWIRE_MCP_TRANSPORT", "stdio").lower()
 
     if transport == "sse":
-        host = os.environ.get("SPEECHWIRE_MCP_HOST", "0.0.0.0")
+        host = os.environ.get("SPEECHWIRE_MCP_HOST", "127.0.0.1")
         port = int(os.environ.get("SPEECHWIRE_MCP_PORT", "8080"))
         logger.info("Starting SpeechWire MCP server (SSE) on %s:%d", host, port)
         mcp.run(transport="sse", host=host, port=port)

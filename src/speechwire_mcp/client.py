@@ -110,7 +110,7 @@ class SpeechWireClient:
                     "Login rejected — SpeechWire reported invalid credentials"
                 )
             self.state = ClientState.LOGGED_IN
-            logger.info("Logged in as %s", self.email)
+            logger.debug("Logged in as %s", self.email)
         except RequestException as e:
             raise SpeechWireAuthError(f"Login failed: {e}") from e
 
@@ -126,7 +126,8 @@ class SpeechWireClient:
         """
         try:
             resp = self.session.get(
-                f"https://www.speechwire.com/c-account-select.php?selectaccountid={account_id}"
+                "https://www.speechwire.com/c-account-select.php",
+                params={"selectaccountid": str(account_id)},
             )
             resp.raise_for_status()
             self.account_id = str(account_id)
@@ -282,7 +283,7 @@ class SpeechWireClient:
             return True
         return False
 
-    def get(self, url: str) -> requests.Response:
+    def get(self, url: str, params: dict | None = None) -> requests.Response:
         """GET a manage.speechwire.com page with session-expiry handling.
 
         If the response looks like an expired session (login page redirect
@@ -290,14 +291,14 @@ class SpeechWireClient:
         and retries the request once.  A guard prevents infinite recursion
         when ``_authenticate`` itself issues GETs (e.g. account discovery).
         """
-        resp = self.session.get(url)
+        resp = self.session.get(url, params=params)
         if self._looks_like_expired_session(resp) and not self._reauthenticating:
             self._reauthenticating = True
             try:
                 self._authenticate()
             finally:
                 self._reauthenticating = False
-            resp = self.session.get(url)
+            resp = self.session.get(url, params=params)
         return resp
 
     def post(self, url: str, data: dict) -> requests.Response:
@@ -330,6 +331,7 @@ def _fetch_and_parse(
     parser: Callable[[str], T],
     default: T,
     context: str = "",
+    params: dict | None = None,
 ) -> T:
     """Fetch a page and parse it, returning *default* on any failure.
 
@@ -345,22 +347,24 @@ def _fetch_and_parse(
         Value returned when fetching or parsing fails.
     context : str
         Human-readable label for log messages.
+    params : dict | None
+        Optional query parameters passed to ``requests.Session.get``.
     """
     if not client:
         logger.error("No SpeechWire client provided")
         return default
 
     try:
-        resp = client.get(url)
+        resp = client.get(url, params=params)
         resp.raise_for_status()
     except Exception:
-        logger.exception("Failed to fetch %s", context)
+        logger.error("Failed to fetch %s", context)
         return default
 
     try:
         return parser(resp.text)
     except Exception:
-        logger.exception("Failed to parse %s", context)
+        logger.error("Failed to parse %s", context)
         return default
 
 
@@ -397,11 +401,11 @@ def _post_and_parse(
         resp = client.post(url, data=data)
         resp.raise_for_status()
     except Exception:
-        logger.exception("Failed to post %s", context)
+        logger.error("Failed to post %s", context)
         return default
 
     try:
         return parser(resp.text)
     except Exception:
-        logger.exception("Failed to parse %s response", context)
+        logger.error("Failed to parse %s response", context)
         return default

@@ -1,9 +1,13 @@
+import logging
+
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse
 from speechwire_mcp.teams.parsers import (
     parse_team_list_html,
     parse_team_entries_html,
     parse_hybrid_entries_html,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_team_list(client: SpeechWireClient) -> list[dict]:
@@ -52,10 +56,11 @@ def get_team_entries(team_id: int, client: SpeechWireClient) -> list[dict]:
     """
     return _fetch_and_parse(
         client,
-        f"https://manage.speechwire.com/tabroom/teams-entries.php?teamid={team_id}",
+        "https://manage.speechwire.com/tabroom/teams-entries.php",
         parse_team_entries_html,
         default=[],
         context=f"entries for team {team_id}",
+        params={"teamid": str(team_id)},
     )
 
 
