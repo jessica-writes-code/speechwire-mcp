@@ -117,3 +117,11 @@ pushing a `v*` tag.
 3. Export it from `<domain>/__init__.py`.
 4. Register the tool in `server.py` with `@mcp.tool()` and a clear docstring.
 5. Write parser tests in `tests/`.
+
+## Process
+
+- **Never make git commits or push branches without explicit permission.**
+- **Do not add new dependencies** (packages, libraries, tools) without asking
+  first.
+- **Run `ruff check src/ tests/` and `pytest`** before declaring work complete.
+- **Do not modify files outside `src/` and `tests/`** without asking first.
