@@ -5,6 +5,8 @@ from speechwire_mcp.judges.client import (
     get_judge_school,
     add_judge,
     get_judge_types,
+    update_judge_email,
+    update_judge_availability,
 )
 
 __all__ = [
@@ -14,4 +16,6 @@ __all__ = [
     "get_judge_school",
     "add_judge",
     "get_judge_types",
+    "update_judge_email",
+    "update_judge_availability",
 ]

@@ -654,3 +654,263 @@ class TestParseJudgeTypes:
             assert "judge_type_id" in record
             assert "judge_type" in record
             assert "groupings" in record
+
+
+# ---------------------------------------------------------------------------
+# Edit form values parser tests
+# ---------------------------------------------------------------------------
+
+SAMPLE_EDIT_FORM_HTML = f"""<!DOCTYPE html>
+<html><head><title>SpeechWire</title></head>
+<body>
+<p class='pagetitle'>Edit judge</p>
+<form id="form1" name="form1" method="post" action="judges-edit.php">
+<p class='sectiontitle'>General information</p>
+<p>Name: <input class='swtext' id='judgename' type='text' name='judgename' \
+value="{DONNA_MOSS}" size='30' maxlength='50'>
+Email address: <input class='swtext' id='judgeemail' type='text' name='judgeemail' \
+value="{email_for(DONNA_MOSS)}" size='30' maxlength='50'></p>
+<p>Team: <select id='teamid' name='teamid'><option value='20'>Some School</option>\
+<option selected value='21'>{MANCHESTER_PREP}</option></select></p>
+<p>Clean/Neutral judge? <select id='judgeisclean' name='judgeisclean'>\
+<option selected value='0'>No</option><option value='1'>Yes</option></select>
+Active? <select id='judgeactive' name='judgeactive'>\
+<option value='0'>No</option><option selected value='1'>Yes</option></select>
+Priority? <select id='judgeispriority' name='judgeispriority'>\
+<option selected value='0'>No</option><option value='1'>Yes</option></select></p>
+<p><input name="Submit" type="submit" value="Save changes">
+<input name='mode' id="mode" type="hidden" value="editjudge" />
+<input name='judgeid' id="judgeid" type="hidden" value="42" /></p>
+<p class='sectiontitle'>Availability by timeslot</p>
+<table class='dd'>\
+<tr class='tableheader'><td>Sat. 9:00 AM</td><td>Sat. 10:45 AM</td>\
+<td>Sat. 1:00 PM</td><td>Sat. 3:30 PM</td></tr>
+<tr><td><input type="checkbox" name="slotunblock[3]" value="1" checked></td>
+<td><input type="checkbox" name="slotunblock[4]" value="1" checked></td>
+<td><input type="checkbox" name="slotunblock[5]" value="1"></td>
+<td><input type="checkbox" name="slotunblock[6]" value="1"></td></tr></table>
+</form></body></html>"""
+
+
+def _import_parse_edit_form_values():
+    try:
+        from speechwire_mcp.judges.parsers import parse_edit_form_values
+
+        return parse_edit_form_values
+    except ImportError:
+        pytest.skip("parse_edit_form_values not implemented yet")
+
+
+class TestParseEditFormValues:
+    def test_extracts_judgename(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["fields"]["judgename"] == DONNA_MOSS
+
+    def test_extracts_judgeemail(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["fields"]["judgeemail"] == email_for(DONNA_MOSS)
+
+    def test_extracts_teamid(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["fields"]["teamid"] == "21"
+
+    def test_select_judgeisclean(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["fields"]["judgeisclean"] == "0"
+
+    def test_select_judgeactive(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["fields"]["judgeactive"] == "1"
+
+    def test_select_judgeispriority(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["fields"]["judgeispriority"] == "0"
+
+    def test_available_slots_only_checked(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert result["available_slots"] == [3, 4]
+
+    def test_empty_html_returns_defaults(self):
+        parse = _import_parse_edit_form_values()
+        result = parse("")
+        assert result is None
+
+    def test_result_has_all_expected_keys(self):
+        parse = _import_parse_edit_form_values()
+        result = parse(SAMPLE_EDIT_FORM_HTML)
+        assert set(result.keys()) == {"fields", "available_slots"}
+
+    def test_returns_none_for_non_edit_page(self):
+        parse = _import_parse_edit_form_values()
+        html = "<html><body><p>No form here</p></body></html>"
+        assert parse(html) is None
+
+    def test_second_form_not_contaminated(self):
+        parse = _import_parse_edit_form_values()
+        html = f"""<!DOCTYPE html>
+<html><body>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='mode' type='hidden' value='editjudge' />
+<input name='judgeid' type='hidden' value='42' />
+<input name='judgename' type='text' value='{DONNA_MOSS}' />
+<input type="checkbox" name="slotunblock[1]" value="1" checked>
+</form>
+<form id="form2">
+<input type="checkbox" name="slotunblock[99]" value="1" checked>
+</form>
+</body></html>"""
+        result = parse(html)
+        assert result["available_slots"] == [1]
+        assert 99 not in result["available_slots"]
+
+    def test_select_defaults_to_first_option(self):
+        parse = _import_parse_edit_form_values()
+        html = """<!DOCTYPE html>
+<html><body>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='mode' type='hidden' value='editjudge' />
+<input name='judgeid' type='hidden' value='42' />
+<select name='teamid'>
+  <option value='10'>First</option>
+  <option value='20'>Second</option>
+</select>
+</form></body></html>"""
+        result = parse(html)
+        assert result["fields"]["teamid"] == "10"
+
+    def test_preserves_hidden_inputs(self):
+        parse = _import_parse_edit_form_values()
+        html = """<!DOCTYPE html>
+<html><body>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='mode' type='hidden' value='editjudge' />
+<input name='judgeid' type='hidden' value='42' />
+<input name='csrf_token' type='hidden' value='abc123' />
+</form></body></html>"""
+        result = parse(html)
+        assert result["fields"]["csrf_token"] == "abc123"
+        assert "mode" not in result["fields"]
+        assert "judgeid" not in result["fields"]
+
+    def test_preserves_coach_field(self):
+        parse = _import_parse_edit_form_values()
+        html = f"""<!DOCTYPE html>
+<html><body>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='mode' type='hidden' value='editjudge' />
+<input name='judgeid' type='hidden' value='42' />
+<input name='judgename' type='text' value='{DONNA_MOSS}' />
+<input name='judgeiscoach' type='text' value='1' />
+</form></body></html>"""
+        result = parse(html)
+        assert result["fields"]["judgeiscoach"] == "1"
+
+
+# ---------------------------------------------------------------------------
+# Edit judge response parser tests
+# ---------------------------------------------------------------------------
+
+EDIT_JUDGE_SUCCESS_HTML = """<!DOCTYPE html>
+<html><body>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='mode' type='hidden' value='editjudge' />
+<input name='judgeid' type='hidden' value='42' />
+<input name='judgename' value='Test Judge' />
+</form></body></html>"""
+
+EDIT_JUDGE_ERROR_HTML = """<!DOCTYPE html>
+<html><body>
+<p>Error: email address is invalid</p>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='mode' type='hidden' value='editjudge' />
+<input name='judgeid' type='hidden' value='42' />
+</form></body></html>"""
+
+EDIT_JUDGE_NO_JUDGE_HTML = """<!DOCTYPE html>
+<html><body>
+<p>No judge specified</p>
+</body></html>"""
+
+EDIT_JUDGE_AMBIGUOUS_HTML = """<!DOCTYPE html>
+<html><body>
+<p>Some unrelated content</p>
+</body></html>"""
+
+
+def _import_parse_edit_judge_response():
+    try:
+        from speechwire_mcp.judges.parsers import parse_edit_judge_response
+
+        return parse_edit_judge_response
+    except ImportError:
+        pytest.skip("parse_edit_judge_response not implemented yet")
+
+
+class TestParseEditJudgeResponse:
+    def test_mode_editjudge_alone_is_ambiguous(self):
+        parse = _import_parse_edit_judge_response()
+        result = parse(EDIT_JUDGE_SUCCESS_HTML)
+        assert result["success"] is False
+
+    def test_error_text_detected(self):
+        parse = _import_parse_edit_judge_response()
+        result = parse(EDIT_JUDGE_ERROR_HTML)
+        assert result["success"] is False
+        assert result["error"] == "edit failed (server rejected the change)"
+
+    def test_no_judge_specified(self):
+        parse = _import_parse_edit_judge_response()
+        result = parse(EDIT_JUDGE_NO_JUDGE_HTML)
+        assert result["success"] is False
+        assert result["error"] is not None
+
+    def test_ambiguous_response(self):
+        parse = _import_parse_edit_judge_response()
+        result = parse(EDIT_JUDGE_AMBIGUOUS_HTML)
+        assert result["success"] is False
+        assert result["judge_id"] is None
+        assert "ambiguous" in result["error"].lower()
+
+    def test_judge_id_extracted(self):
+        parse = _import_parse_edit_judge_response()
+        result = parse(EDIT_JUDGE_SUCCESS_HTML)
+        assert result["judge_id"] is None or isinstance(result["judge_id"], int)
+
+    def test_empty_html_returns_failure(self):
+        parse = _import_parse_edit_judge_response()
+        result = parse("")
+        assert result["success"] is False
+        assert result["judge_id"] is None
+
+    def test_success_with_success_msg(self):
+        parse = _import_parse_edit_judge_response()
+        html = """<!DOCTYPE html>
+<html><body>
+<div class="successmsg">Changes saved</div>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='judgeid' type='hidden' value='42' />
+</form></body></html>"""
+        result = parse(html)
+        assert result["success"] is True
+        assert result["judge_id"] == 42
+        assert result["error"] is None
+
+    def test_success_with_judge_saved_text(self):
+        parse = _import_parse_edit_judge_response()
+        html = """<!DOCTYPE html>
+<html><body>
+<p>judge saved</p>
+<form id="form1" method="post" action="judges-edit.php">
+<input name='judgeid' type='hidden' value='42' />
+</form></body></html>"""
+        result = parse(html)
+        assert result["success"] is True
+        assert result["judge_id"] == 42
+        assert result["error"] is None
