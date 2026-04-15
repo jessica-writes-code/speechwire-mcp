@@ -33,6 +33,8 @@ from speechwire_mcp.judges import (
     get_judge_school,
     add_judge,
     get_judge_types,
+    update_judge_email,
+    update_judge_availability,
 )
 from speechwire_mcp.schematics import (
     get_schematic_events,
@@ -394,6 +396,63 @@ def speechwire_add_judge(
             available_slots=available_slots,
         ),
         "Failed to add judge",
+        default={"success": False, "judge_id": None, "error": "unexpected error"},
+        require_tournament=True,
+    )
+
+
+@mcp.tool()
+def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
+    """Update a judge's email address.
+
+    Prefetches the current edit form, merges the new email, and re-submits
+    all fields so that no existing values are lost.
+
+    Parameters
+    ----------
+    judge_id : int
+        ID of the judge to update.
+    email : str
+        New email address for the judge.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    return _safe_tool_call(
+        lambda: update_judge_email(judge_id, email, _get_client()),
+        f"Failed to update email for judge {judge_id}",
+        default={"success": False, "judge_id": None, "error": "unexpected error"},
+        require_tournament=True,
+    )
+
+
+@mcp.tool()
+def speechwire_update_judge_availability(
+    judge_id: int, available_slots: list[int]
+) -> dict:
+    """Update a judge's availability slots.
+
+    Prefetches the current edit form, replaces the slot checkboxes with the
+    provided list, and re-submits all fields so that no existing values are lost.
+
+    Parameters
+    ----------
+    judge_id : int
+        ID of the judge to update.
+    available_slots : list[int]
+        Slot indices the judge should be available for.
+        Get valid slot numbers from speechwire_list_timeslots.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    return _safe_tool_call(
+        lambda: update_judge_availability(judge_id, available_slots, _get_client()),
+        f"Failed to update availability for judge {judge_id}",
         default={"success": False, "judge_id": None, "error": "unexpected error"},
         require_tournament=True,
     )

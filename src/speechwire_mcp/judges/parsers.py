@@ -330,6 +330,151 @@ def parse_add_judge_response(html: str) -> dict:
     return {"success": False, "judge_id": None, "error": "ambiguous response (no success signal)"}
 
 
+def parse_edit_form_values(html: str) -> dict | None:
+    """Extract all current form field values from a judge edit page.
+
+    Parses input values, selected options, and checked checkboxes so that the
+    caller can re-submit the form with selective modifications (prefetch→merge→POST).
+
+    All extraction is scoped to the edit-judge form (``form#form1`` containing
+    ``mode=editjudge``).  If the form is not found the page is not a valid
+    edit page and ``None`` is returned so that callers abort before POSTing
+    destructive blank data.
+
+    Parameters
+    ----------
+    html : str
+        Raw HTML of the ``judges-edit.php`` page for an existing judge.
+
+    Returns
+    -------
+    dict | None
+        ``None`` when the edit form is not found.  Otherwise a dict with:
+        ``fields`` (``dict[str, str]`` — all text/select/hidden inputs),
+        ``available_slots`` (``list[int]`` — checked slot indices).
+    """
+    soup = make_soup(html)
+
+    # Scope to the edit-judge form only; the page may also contain formtime.
+    form = soup.find("form", {"id": "form1"})
+    if form is None:
+        return None
+    # Verify this is the edit-judge form
+    mode_input = form.find("input", {"name": "mode", "value": "editjudge"})
+    if mode_input is None:
+        return None
+
+    _SKIP_FIELDS = {"mode", "judgeid"}
+
+    fields: dict[str, str] = {}
+
+    # Text and hidden inputs
+    for inp in form.find_all("input", {"type": ["text", "hidden"]}):
+        name = (inp.get("name") or "").strip()
+        if name and name not in _SKIP_FIELDS:
+            fields[name] = (inp.get("value", "") or "").strip()
+
+    # Selects — fall back to first option when none is explicitly selected
+    for select in form.find_all("select"):
+        name = (select.get("name") or "").strip()
+        if not name or name in _SKIP_FIELDS:
+            continue
+        option = select.find("option", selected=True) or select.find("option")
+        fields[name] = (option.get("value", "") if option else "").strip()
+
+    # Checked slot checkboxes → list of slot indices
+    available_slots: list[int] = []
+    for inp in form.find_all("input", {"type": "checkbox"}):
+        cb_name = inp.get("name", "") or ""
+        m = re.match(r"slotunblock\[(\d+)\]", cb_name)
+        if m and inp.has_attr("checked"):
+            available_slots.append(int(m.group(1)))
+    available_slots.sort()
+
+    return {
+        "fields": fields,
+        "available_slots": available_slots,
+    }
+
+
+def parse_edit_judge_response(html: str) -> dict:
+    """Detect success or error after a judge-edit POST.
+
+    The edit form re-renders on both success and failure (unlike add-judge
+    which redirects on success), so detection relies on the presence or
+    absence of error text.
+
+    Parameters
+    ----------
+    html : str
+        Raw HTML response from ``judges-edit.php`` after a POST.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    soup = make_soup(html)
+
+    # --- error signals ---
+    error_texts: list[str] = []
+    for tag in soup.find_all(["p", "div"]):
+        text = tag.get_text(" ", strip=True)
+        if text and "error" in text.lower():
+            error_texts.append(text)
+
+    no_judge = bool(soup.find(string=lambda s: s and "No judge specified" in s))
+    has_error = bool(error_texts) or no_judge
+
+    # --- extract judge_id ---
+    judge_id: int | None = None
+    judge_id_input = soup.find("input", {"name": "judgeid"})
+    if judge_id_input:
+        try:
+            judge_id = int(judge_id_input.get("value", ""))
+        except (ValueError, TypeError):
+            pass
+
+    if judge_id is None:
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if "judgeid=" in href:
+                judge_id = extract_int_query_param(a, "judgeid")
+                if judge_id is not None:
+                    break
+
+    # --- success signals ---
+    success_msg = soup.find("div", class_="successmsg")
+    body_text = soup.get_text(" ", strip=True).lower()
+    has_success = (
+        success_msg is not None
+        or "judge saved" in body_text
+        or "successfully" in body_text
+    )
+
+    if has_error:
+        # Sanitise: never forward raw HTML error text (may contain PII).
+        if error_texts:
+            raw = error_texts[0].lower()
+            safe_error = (
+                "judge not found"
+                if "no judge" in raw
+                else "edit failed (server rejected the change)"
+            )
+        else:
+            safe_error = "edit failed"
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": safe_error,
+        }
+
+    if has_success:
+        return {"success": True, "judge_id": judge_id, "error": None}
+
+    return {"success": False, "judge_id": None, "error": "ambiguous response (no success signal)"}
+
+
 def parse_judge_types_from_html(html: str) -> list[dict]:
     """Parse the judge types list page into structured records.
 

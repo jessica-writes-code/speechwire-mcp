@@ -1,4 +1,5 @@
 import logging
+import re
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse, _post_and_parse
 from speechwire_mcp.judges.parsers import (
@@ -7,10 +8,14 @@ from speechwire_mcp.judges.parsers import (
     parse_availability_from_edit_html,
     parse_school_from_edit_html,
     parse_add_judge_response,
+    parse_edit_form_values,
+    parse_edit_judge_response,
     parse_judge_types_from_html,
 )
 
 logger = logging.getLogger(__name__)
+
+_EMAIL_RE = re.compile(r"^[\w\.\+\-]+@[\w\.\-]+\.\w+$")
 
 
 def get_judge_list(client: SpeechWireClient) -> list[dict]:
@@ -207,4 +212,163 @@ def get_judge_types(client: SpeechWireClient) -> list[dict]:
         parse_judge_types_from_html,
         default=[],
         context="judge types list",
+    )
+
+
+_EDIT_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-edit.php"
+
+
+def _prefetch_edit_form(judge_id: int, client: SpeechWireClient) -> dict | None:
+    """Prefetch the judge edit form and return current field values.
+
+    Parameters
+    ----------
+    judge_id : int
+        The judge to fetch.
+    client : SpeechWireClient
+        Authenticated client.
+
+    Returns
+    -------
+    dict | None
+        Parsed form values, or ``None`` on failure.
+    """
+    result = _fetch_and_parse(
+        client,
+        _EDIT_JUDGE_URL,
+        parse_edit_form_values,
+        default=None,
+        context=f"edit form prefetch for judge {judge_id}",
+        params={"judgeid": str(judge_id)},
+    )
+    return result
+
+
+def _build_edit_form_data(
+    judge_id: int,
+    current: dict,
+    available_slots: list[int],
+) -> dict[str, str]:
+    """Build the complete form payload for a judge edit POST.
+
+    Parameters
+    ----------
+    judge_id : int
+        The judge being edited.
+    current : dict
+        Current form values from ``parse_edit_form_values``.  Must include
+        ``fields`` (all serialised form controls) and optionally
+        ``hidden_fields`` (legacy key, merged for backward compatibility).
+    available_slots : list[int]
+        Slot indices to mark as available (checked).
+
+    Returns
+    -------
+    dict[str, str]
+        Form data ready for POST.
+    """
+    # Start with all serialised form fields (text, select, hidden inputs).
+    form_data: dict[str, str] = dict(current.get("fields") or {})
+
+    # Merge legacy hidden_fields key if present (earlier security fix).
+    form_data.update(current.get("hidden_fields") or {})
+
+    # Slot checkboxes
+    for slot in available_slots:
+        form_data[f"slotunblock[{slot}]"] = "1"
+
+    # Explicit overrides — these must win regardless of serialised values.
+    form_data["mode"] = "editjudge"
+    form_data["judgeid"] = str(judge_id)
+    form_data["Submit"] = "Save changes"
+
+    return form_data
+
+
+def update_judge_email(judge_id: int, email: str, client: SpeechWireClient) -> dict:
+    """Update a judge's email address via the edit form.
+
+    Uses a prefetch→merge→POST pattern because the SpeechWire edit form
+    submits all fields together.
+
+    Parameters
+    ----------
+    judge_id : int
+        ID of the judge to update.
+    email : str
+        New email address.
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    _default: dict = {"success": False, "judge_id": None, "error": "unexpected error"}
+
+    if not email or not email.strip():
+        return {"success": False, "judge_id": None, "error": "email is required"}
+
+    email = email.strip()
+    if not _EMAIL_RE.match(email):
+        return {"success": False, "judge_id": None, "error": "invalid email format"}
+
+    current = _prefetch_edit_form(judge_id, client)
+    if current is None:
+        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+
+    form_data = _build_edit_form_data(judge_id, current, current["available_slots"])
+    form_data["judgeemail"] = email.strip()
+
+    return _post_and_parse(
+        client,
+        _EDIT_JUDGE_URL,
+        form_data,
+        parse_edit_judge_response,
+        default=_default,
+        context=f"update email for judge {judge_id}",
+    )
+
+
+def update_judge_availability(
+    judge_id: int,
+    available_slots: list[int],
+    client: SpeechWireClient,
+) -> dict:
+    """Update a judge's availability slots via the edit form.
+
+    Uses a prefetch→merge→POST pattern because the SpeechWire edit form
+    submits all fields together.
+
+    Parameters
+    ----------
+    judge_id : int
+        ID of the judge to update.
+    available_slots : list[int]
+        Slot indices the judge should be available for. Replaces any
+        previously checked slots.
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    _default: dict = {"success": False, "judge_id": None, "error": "unexpected error"}
+
+    current = _prefetch_edit_form(judge_id, client)
+    if current is None:
+        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+
+    form_data = _build_edit_form_data(judge_id, current, available_slots)
+
+    return _post_and_parse(
+        client,
+        _EDIT_JUDGE_URL,
+        form_data,
+        parse_edit_judge_response,
+        default=_default,
+        context=f"update availability for judge {judge_id}",
     )
