@@ -198,7 +198,7 @@ class TestStateGating:
         from unittest.mock import patch, MagicMock
 
         SpeechWireClient = _import_client()
-        client = SpeechWireClient(email="u@x.com", password="p")
+        client = SpeechWireClient(email="u@example.com", password="p")
 
         expired_resp = MagicMock()
         expired_resp.text = '<input type="password" />'
@@ -271,7 +271,7 @@ class TestRequireTournamentGuard:
         _require_tournament = _import_require_tournament()
 
         client = SpeechWireClient(
-            email="u@x.com", password="p",
+            email="u@example.com", password="p",
             account_id="1", circuit_id="2", tournament_id="3",
         )
         client.state = ClientState.TOURNAMENT_ACTIVE
@@ -286,7 +286,7 @@ class TestRequireTournamentGuard:
         from unittest.mock import patch
 
         client = SpeechWireClient(
-            email="u@x.com", password="p",
+            email="u@example.com", password="p",
             account_id="1", circuit_id="2", tournament_id="3",
         )
         assert client.state == ClientState.UNAUTHENTICATED
@@ -307,7 +307,7 @@ class TestRequireTournamentGuard:
         SpeechWireClient = _import_client()
         _require_tournament = _import_require_tournament()
 
-        client = SpeechWireClient(email="u@x.com", password="p")
+        client = SpeechWireClient(email="u@example.com", password="p")
         result = _require_tournament(client)
         assert result is not None
         assert result["error"] == "no_tournament_selected"
@@ -320,7 +320,7 @@ class TestRequireTournamentGuard:
         from unittest.mock import patch
 
         client = SpeechWireClient(
-            email="u@x.com", password="p",
+            email="u@example.com", password="p",
             account_id="1", circuit_id="2", tournament_id="3",
         )
 

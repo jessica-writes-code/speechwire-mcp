@@ -148,7 +148,7 @@ class TestLooksLikeExpiredSession:
         SpeechWireClient = _import_client()
         if not hasattr(SpeechWireClient, "_looks_like_expired_session"):
             pytest.skip("_looks_like_expired_session not implemented yet")
-        client = SpeechWireClient(email="test@x.com", password="p")
+        client = SpeechWireClient(email="test@example.com", password="p")
         return client._looks_like_expired_session(resp)
 
     def test_detects_login_page_with_password_field(self):
