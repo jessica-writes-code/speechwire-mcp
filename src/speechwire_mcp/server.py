@@ -35,6 +35,7 @@ from speechwire_mcp.judges import (
     get_judge_types,
     update_judge_email,
     update_judge_availability,
+    update_judge_school,
 )
 from speechwire_mcp.schematics import (
     get_schematic_events,
@@ -453,6 +454,33 @@ def speechwire_update_judge_availability(
     return _safe_tool_call(
         lambda: update_judge_availability(judge_id, available_slots, _get_client()),
         f"Failed to update availability for judge {judge_id}",
+        default={"success": False, "judge_id": None, "error": "unexpected error"},
+        require_tournament=True,
+    )
+
+
+@mcp.tool()
+def speechwire_update_judge_school(judge_id: int, team_id: int) -> dict:
+    """Update a judge's school (team) affiliation.
+
+    Prefetches the current edit form, merges the new team ID, and re-submits
+    all fields so that no existing values are lost.
+
+    Parameters
+    ----------
+    judge_id : int
+        ID of the judge to update.
+    team_id : int
+        New team/school ID. Get valid IDs from speechwire_list_teams.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    return _safe_tool_call(
+        lambda: update_judge_school(judge_id, team_id, _get_client()),
+        f"Failed to update school for judge {judge_id}",
         default={"success": False, "judge_id": None, "error": "unexpected error"},
         require_tournament=True,
     )

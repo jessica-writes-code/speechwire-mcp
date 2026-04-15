@@ -372,3 +372,53 @@ def update_judge_availability(
         default=_default,
         context=f"update availability for judge {judge_id}",
     )
+
+
+def update_judge_school(
+    judge_id: int,
+    team_id: int,
+    client: SpeechWireClient,
+) -> dict:
+    """Update a judge's school (team) affiliation via the edit form.
+
+    Uses a prefetch→merge→POST pattern because the SpeechWire edit form
+    submits all fields together.
+
+    Parameters
+    ----------
+    judge_id : int
+        ID of the judge to update.
+    team_id : int
+        New team/school ID. Get valid IDs from speechwire_list_teams.
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
+    """
+    _default: dict = {"success": False, "judge_id": None, "error": "unexpected error"}
+
+    if not team_id:
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "team_id is required (use speechwire_list_teams to find valid IDs)",
+        }
+
+    current = _prefetch_edit_form(judge_id, client)
+    if current is None:
+        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+
+    form_data = _build_edit_form_data(judge_id, current, current["available_slots"])
+    form_data["teamid"] = str(team_id)
+
+    return _post_and_parse(
+        client,
+        _EDIT_JUDGE_URL,
+        form_data,
+        parse_edit_judge_response,
+        default=_default,
+        context=f"update school for judge {judge_id}",
+    )
