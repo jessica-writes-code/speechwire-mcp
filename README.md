@@ -23,57 +23,11 @@ The server scrapes manage.speechwire.com behind an authenticated session and exp
 pip install speechwire-mcp
 ```
 
-Or install from source for development:
-
-```bash
-git clone https://github.com/jessica-writes-code/speechwire-mcp.git
-cd speechwire-mcp
-pip install -e ".[dev]"
-```
-
-## Configuration
-
 Set your SpeechWire credentials as environment variables:
 
 ```bash
 export SPEECHWIRE_EMAIL="your-email@example.com"
 export SPEECHWIRE_PASSWORD="your-password"
-```
-
-Or copy the example file:
-
-```bash
-cp .env.example .env
-# Edit .env with your credentials
-```
-
-### Optional environment variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SPEECHWIRE_ACCOUNT_ID` | *(discovered)* | Numeric account ID — skips account selection |
-| `SPEECHWIRE_CIRCUIT_ID` | *(discovered)* | Numeric circuit ID — skips tournament selection |
-| `SPEECHWIRE_TOURNAMENT_ID` | *(discovered)* | Numeric tournament ID — skips tournament selection |
-| `SPEECHWIRE_MCP_TRANSPORT` | `stdio` | Transport protocol: `stdio` or `sse` |
-| `SPEECHWIRE_MCP_HOST` | `127.0.0.1` | SSE bind host |
-| `SPEECHWIRE_MCP_PORT` | `8080` | SSE bind port |
-
-When account/circuit/tournament IDs are omitted, the server enters **discovery mode** — use the `speechwire_list_user_accounts` and `speechwire_list_user_tournaments` tools to browse and select interactively.
-
-### MCP client configuration
-
-```json
-{
-  "mcpServers": {
-    "speechwire": {
-      "command": "speechwire-mcp",
-      "env": {
-        "SPEECHWIRE_EMAIL": "your-email@example.com",
-        "SPEECHWIRE_PASSWORD": "your-password"
-      }
-    }
-  }
-}
 ```
 
 ## Available MCP Tools
@@ -89,6 +43,9 @@ When account/circuit/tournament IDs are omitted, the server enters **discovery m
 | `speechwire_get_judge_availability` | Get judge availability by timeslot |
 | `speechwire_get_judge_school` | Get judge's school association |
 | `speechwire_add_judge` | Add a new judge to the tournament |
+| `speechwire_update_judge_email` | Update a judge's email address |
+| `speechwire_update_judge_availability` | Update a judge's availability slots |
+| `speechwire_update_judge_school` | Update a judge's school/team affiliation |
 | `speechwire_list_judge_types` | List configured judge types |
 | `speechwire_list_rooms` | List tournament rooms |
 | `speechwire_get_room_usage` | Get room time-slot usage grid |
