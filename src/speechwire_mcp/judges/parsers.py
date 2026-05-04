@@ -306,13 +306,14 @@ def parse_add_judge_response(html: str) -> dict:
                 if judge_id is not None:
                     break
 
-    body_text = soup.get_text(" ", strip=True).lower()
+    # Rely on structural signals (successmsg div, judge_id) rather than
+    # broad body-text substring matches which can produce false positives.
+    success_text = success_msg.get_text(" ", strip=True).lower() if success_msg else ""
     has_success = (
         success_msg is not None
         or judge_id is not None
-        or "judge added" in body_text
-        or "judge saved" in body_text
-        or "successfully" in body_text
+        or "judge added" in success_text
+        or "judge saved" in success_text
     )
 
     # --- priority: error overrides success ---
@@ -445,11 +446,10 @@ def parse_edit_judge_response(html: str) -> dict:
 
     # --- success signals ---
     success_msg = soup.find("div", class_="successmsg")
-    body_text = soup.get_text(" ", strip=True).lower()
+    success_text = success_msg.get_text(" ", strip=True).lower() if success_msg else ""
     has_success = (
         success_msg is not None
-        or "judge saved" in body_text
-        or "successfully" in body_text
+        or "judge saved" in success_text
     )
 
     if has_error:
