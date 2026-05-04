@@ -484,7 +484,7 @@ ADD_JUDGE_SUCCESS_WITH_ID_HTML = f"""<!DOCTYPE html>
 
 ADD_JUDGE_SUCCESS_NO_ID_HTML = """<!DOCTYPE html>
 <html><body>
-  <p>Judge successfully added to the tournament.</p>
+  <div class="successmsg">Judge added to the tournament.</div>
 </body></html>
 """
 
@@ -563,6 +563,17 @@ class TestParseAddJudgeResponse:
         parse = _import_parse_add_judge_response()
         result = parse(ADD_JUDGE_JUDGE_LIST_HTML)
         assert result["success"] is True
+
+    def test_loose_body_text_does_not_trigger_success(self):
+        """Broad strings like 'successfully' in unrelated body text must not match."""
+        parse = _import_parse_add_judge_response()
+        html = """<!DOCTYPE html>
+<html><body>
+  <p>You have successfully logged in.</p>
+  <p>Welcome to SpeechWire.</p>
+</body></html>"""
+        result = parse(html)
+        assert result["success"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -906,7 +917,7 @@ class TestParseEditJudgeResponse:
         parse = _import_parse_edit_judge_response()
         html = """<!DOCTYPE html>
 <html><body>
-<p>judge saved</p>
+<div class="successmsg">Judge saved</div>
 <form id="form1" method="post" action="judges-edit.php">
 <input name='judgeid' type='hidden' value='42' />
 </form></body></html>"""
