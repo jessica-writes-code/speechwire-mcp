@@ -100,8 +100,10 @@ def _require_tournament(client: SpeechWireClient) -> dict | None:
     if client.account_id and client.circuit_id and client.tournament_id:
         try:
             client.ensure_tournament_session()
-        except Exception:
-            logger.exception("Auto-authentication with provided IDs failed")
+        except Exception as exc:
+            logger.error(
+                "Auto-authentication with provided IDs failed: %s", type(exc).__name__
+            )
         if client.state == ClientState.TOURNAMENT_ACTIVE:
             return None
 
@@ -162,8 +164,8 @@ def _safe_tool_call(
                 return guard  # type: ignore[return-value]
 
         return func()
-    except Exception:
-        logger.exception(error_msg)
+    except Exception as exc:
+        logger.error("%s: %s", error_msg, type(exc).__name__)
         return default
 
 
