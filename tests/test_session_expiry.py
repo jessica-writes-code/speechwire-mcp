@@ -20,14 +20,15 @@ from fake_data import (
     LEO_MCGARRY,
 )
 
-
 # ---------------------------------------------------------------------------
 # Guarded imports — skip if not yet implemented
 # ---------------------------------------------------------------------------
 
+
 def _import_client():
     try:
         from speechwire_mcp.client import SpeechWireClient
+
         return SpeechWireClient
     except ImportError:
         pytest.skip("SpeechWireClient not available")
@@ -36,6 +37,7 @@ def _import_client():
 def _import_auth_error():
     try:
         from speechwire_mcp.client import SpeechWireAuthError
+
         return SpeechWireAuthError
     except ImportError:
         pytest.skip("SpeechWireAuthError not available")
@@ -44,6 +46,7 @@ def _import_auth_error():
 def _import_fetch_and_parse():
     try:
         from speechwire_mcp.client import _fetch_and_parse
+
         return _fetch_and_parse
     except ImportError:
         pytest.skip("_fetch_and_parse not available")
@@ -141,6 +144,7 @@ def _make_client(**kwargs):
 # 1. _looks_like_expired_session() unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestLooksLikeExpiredSession:
     """Direct unit tests for the expiry detection heuristic."""
 
@@ -176,10 +180,18 @@ class TestLooksLikeExpiredSession:
         assert self._call(resp) is False
 
     def test_tournament_text_on_manage_page_is_expired(self):
-        """'Select the tournament' on a non-tournament page → expired."""
+        """Tournament text alone on a manage page should not force re-auth."""
         resp = _make_response(
             TOURNAMENT_SELECT_PAGE_HTML,
             url="https://manage.speechwire.com/tabroom/judges-activecheckin.php",
+        )
+        assert self._call(resp) is False
+
+    def test_login_url_is_expired_even_without_body_markers(self):
+        """Response URL at login endpoint should be treated as expired."""
+        resp = _make_response(
+            "<html><body>Redirected</body></html>",
+            url="https://www.speechwire.com/c-login.php",
         )
         assert self._call(resp) is True
 
@@ -197,6 +209,7 @@ class TestLooksLikeExpiredSession:
 # ---------------------------------------------------------------------------
 # 2. discover_accounts() recovery test
 # ---------------------------------------------------------------------------
+
 
 class TestDiscoverAccountsRecovery:
     """Verify discover_accounts() recovers from expired sessions."""
@@ -216,10 +229,12 @@ class TestDiscoverAccountsRecovery:
         client.session = MagicMock()
         client.session.get = MagicMock(side_effect=[expired_resp, valid_resp])
 
-        with patch.object(client, "login"), \
-             patch.object(client, "select_account"), \
-             patch.object(client, "select_tournament"), \
-             patch.object(client, "_authenticate"):
+        with (
+            patch.object(client, "login"),
+            patch.object(client, "select_account"),
+            patch.object(client, "select_tournament"),
+            patch.object(client, "_authenticate"),
+        ):
             accounts = client.discover_accounts()
 
         assert len(accounts) >= 1
@@ -262,10 +277,12 @@ class TestDiscoverTournamentsRecovery:
         client.session = MagicMock()
         client.session.get = MagicMock(side_effect=[expired_resp, valid_resp])
 
-        with patch.object(client, "login"), \
-             patch.object(client, "select_account"), \
-             patch.object(client, "select_tournament"), \
-             patch.object(client, "_authenticate"):
+        with (
+            patch.object(client, "login"),
+            patch.object(client, "select_account"),
+            patch.object(client, "select_tournament"),
+            patch.object(client, "_authenticate"),
+        ):
             tournaments = client.discover_tournaments()
 
         assert isinstance(tournaments, list)
@@ -274,6 +291,7 @@ class TestDiscoverTournamentsRecovery:
 # ---------------------------------------------------------------------------
 # 4. _fetch_and_parse() tests
 # ---------------------------------------------------------------------------
+
 
 class TestFetchAndParse:
     """Tests for the updated _fetch_and_parse helper."""
@@ -295,9 +313,7 @@ class TestFetchAndParse:
         except TypeError:
             pass  # Expected — raw param removed
         else:
-            pytest.skip(
-                "raw parameter still accepted — refactor not landed yet"
-            )
+            pytest.skip("raw parameter still accepted — refactor not landed yet")
 
     def test_fetch_and_parse_detects_expired_session(self):
         """_fetch_and_parse should detect expired session via client.get(),
@@ -314,10 +330,10 @@ class TestFetchAndParse:
         expired_resp = _make_response(LOGIN_PAGE_HTML)
         valid_resp = _make_response(valid_html)
 
-        with patch.object(
-            client, "get", side_effect=[expired_resp, valid_resp]
-        ), \
-                patch.object(client, "_authenticate"):
+        with (
+            patch.object(client, "get", side_effect=[expired_resp, valid_resp]),
+            patch.object(client, "_authenticate"),
+        ):
             result = _fetch_and_parse(
                 client,
                 "https://manage.speechwire.com/some-page",
@@ -333,6 +349,7 @@ class TestFetchAndParse:
 # ---------------------------------------------------------------------------
 # 5. Edge cases — no infinite loops, safe failure
 # ---------------------------------------------------------------------------
+
 
 class TestEdgeCases:
     """Guard against infinite re-auth loops and ensure safe defaults."""
@@ -375,9 +392,7 @@ class TestEdgeCases:
 
         client = _make_client()
 
-        with patch.object(
-            client, "get", side_effect=SpeechWireAuthError("bad creds")
-        ):
+        with patch.object(client, "get", side_effect=SpeechWireAuthError("bad creds")):
             result = _fetch_and_parse(
                 client,
                 "https://manage.speechwire.com/page",

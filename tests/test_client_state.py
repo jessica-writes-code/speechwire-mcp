@@ -14,15 +14,16 @@ import pytest
 
 from fake_data import HARTSFIELD_LANDING, KENNISON_ACADEMY
 
-
 # ---------------------------------------------------------------------------
 # Guarded imports — skip tests if the implementation isn't available yet
 # ---------------------------------------------------------------------------
+
 
 def _import_client_state():
     """Try importing ClientState; return it or skip."""
     try:
         from speechwire_mcp.client import ClientState
+
         return ClientState
     except ImportError:
         pytest.skip("ClientState not implemented yet")
@@ -32,6 +33,7 @@ def _import_selection_required():
     """Try importing SpeechWireSelectionRequired; return it or skip."""
     try:
         from speechwire_mcp.client import SpeechWireSelectionRequired
+
         return SpeechWireSelectionRequired
     except ImportError:
         pytest.skip("SpeechWireSelectionRequired not implemented yet")
@@ -41,6 +43,7 @@ def _import_client():
     """Try importing SpeechWireClient; return it or skip."""
     try:
         from speechwire_mcp.client import SpeechWireClient
+
         return SpeechWireClient
     except ImportError:
         pytest.skip("SpeechWireClient not available")
@@ -49,6 +52,7 @@ def _import_client():
 # ---------------------------------------------------------------------------
 # Tests — ClientState enum
 # ---------------------------------------------------------------------------
+
 
 class TestClientState:
     def test_enum_values_exist(self):
@@ -74,6 +78,7 @@ class TestClientState:
 # Tests — SpeechWireClient constructor
 # ---------------------------------------------------------------------------
 
+
 class TestClientConstructor:
     def test_constructor_with_only_email_and_password(self):
         """New minimal constructor: only email + password required."""
@@ -85,8 +90,7 @@ class TestClientConstructor:
             )
         except TypeError:
             pytest.skip(
-                "Constructor does not yet accept optional IDs — "
-                "refactor not landed"
+                "Constructor does not yet accept optional IDs — " "refactor not landed"
             )
         assert client.email == "user@example.com"
         assert client.password == "secret"
@@ -144,6 +148,7 @@ class TestClientConstructor:
 # Tests — SpeechWireSelectionRequired exception
 # ---------------------------------------------------------------------------
 
+
 class TestSelectionRequiredException:
     def test_exception_carries_options(self):
         SpeechWireSelectionRequired = _import_selection_required()
@@ -170,6 +175,7 @@ class TestSelectionRequiredException:
 # Tests — State-gated behavior
 # ---------------------------------------------------------------------------
 
+
 class TestStateGating:
     def test_ensure_tournament_session_requires_credentials(self):
         """ensure_tournament_session should raise if not authenticated."""
@@ -188,8 +194,10 @@ class TestStateGating:
             pytest.skip("ensure_tournament_session not implemented yet")
 
         # Mock the HTTP session so the test never makes real network calls
-        with patch.object(client.session, "post", side_effect=Exception("no network")), \
-             patch.object(client.session, "get", side_effect=Exception("no network")):
+        with (
+            patch.object(client.session, "post", side_effect=Exception("no network")),
+            patch.object(client.session, "get", side_effect=Exception("no network")),
+        ):
             with pytest.raises(Exception):
                 client.ensure_tournament_session()
 
@@ -201,8 +209,8 @@ class TestStateGating:
         client = SpeechWireClient(email="u@example.com", password="p")
 
         expired_resp = MagicMock()
-        expired_resp.text = '<input type="password" />'
-        expired_resp.url = "https://manage.speechwire.com/tabroom/judges.php"
+        expired_resp.text = '<form action="c-login.php"><input type="password" /><input name="teamemail" /></form>'
+        expired_resp.url = "https://www.speechwire.com/c-login.php"
 
         client.session.get = MagicMock(return_value=expired_resp)
 
@@ -271,8 +279,11 @@ class TestRequireTournamentGuard:
         _require_tournament = _import_require_tournament()
 
         client = SpeechWireClient(
-            email="u@example.com", password="p",
-            account_id="1", circuit_id="2", tournament_id="3",
+            email="u@example.com",
+            password="p",
+            account_id="1",
+            circuit_id="2",
+            tournament_id="3",
         )
         client.state = ClientState.TOURNAMENT_ACTIVE
         assert _require_tournament(client) is None
@@ -286,8 +297,11 @@ class TestRequireTournamentGuard:
         from unittest.mock import patch
 
         client = SpeechWireClient(
-            email="u@example.com", password="p",
-            account_id="1", circuit_id="2", tournament_id="3",
+            email="u@example.com",
+            password="p",
+            account_id="1",
+            circuit_id="2",
+            tournament_id="3",
         )
         assert client.state == ClientState.UNAUTHENTICATED
 
@@ -320,12 +334,16 @@ class TestRequireTournamentGuard:
         from unittest.mock import patch
 
         client = SpeechWireClient(
-            email="u@example.com", password="p",
-            account_id="1", circuit_id="2", tournament_id="3",
+            email="u@example.com",
+            password="p",
+            account_id="1",
+            circuit_id="2",
+            tournament_id="3",
         )
 
         with patch.object(
-            client, "ensure_tournament_session",
+            client,
+            "ensure_tournament_session",
             side_effect=Exception("network down"),
         ):
             result = _require_tournament(client)
