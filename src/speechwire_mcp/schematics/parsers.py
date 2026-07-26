@@ -1,9 +1,8 @@
 import logging
 import re
+from urllib.parse import parse_qs, urlparse
 
-from urllib.parse import urlparse, parse_qs
-
-from speechwire_mcp.parsing_helpers import make_soup, td_safe, extract_int_query_param
+from speechwire_mcp.parsing_helpers import extract_int_query_param, make_soup, td_safe
 
 logger = logging.getLogger(__name__)
 
@@ -82,13 +81,17 @@ def parse_schematic_events_html(html: str) -> list[dict]:
             q = parse_qs(urlparse(href).query)
             grouping_id_str = q.get("groupingid", [None])[0]
             round_str = q.get("round", [None])[0]
-            if grouping_id_str and round_str:
-                if str(grouping_id_str).isdigit() and str(round_str).isdigit():
-                    gid = int(grouping_id_str)
-                    rnd = int(round_str)
-                    if gid in events and rnd not in events[gid]["rounds"]:
-                        events[gid]["rounds"].append(rnd)
-        except Exception:
+            if (
+                grouping_id_str
+                and round_str
+                and str(grouping_id_str).isdigit()
+                and str(round_str).isdigit()
+            ):
+                gid = int(grouping_id_str)
+                rnd = int(round_str)
+                if gid in events and rnd not in events[gid]["rounds"]:
+                    events[gid]["rounds"].append(rnd)
+        except Exception:  # noqa: BLE001, S112
             continue
 
     # Sort rounds for each event
@@ -219,20 +222,24 @@ def parse_round_schematic_html(html: str) -> dict:
 
             name = clean_text.strip()
 
-            competitors.append({
-                "competitor_id": competitor_id,
-                "name": name,
-                "side": side,
-                "record": record,
-            })
+            competitors.append(
+                {
+                    "competitor_id": competitor_id,
+                    "name": name,
+                    "side": side,
+                    "record": record,
+                }
+            )
 
-        sections.append({
-            "section_id": section_id,
-            "label": label,
-            "judge": judge,
-            "room": room,
-            "competitors": competitors,
-        })
+        sections.append(
+            {
+                "section_id": section_id,
+                "label": label,
+                "judge": judge,
+                "room": room,
+                "competitors": competitors,
+            }
+        )
 
     return {
         "event_name": event_name,

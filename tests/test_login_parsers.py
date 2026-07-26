@@ -5,8 +5,7 @@ They will skip gracefully if the login module has not been implemented yet.
 """
 
 import pytest
-
-from fake_data import HARTSFIELD_LANDING, KENNISON_ACADEMY, CHESAPEAKE_PREP
+from fake_data import CHESAPEAKE_PREP, HARTSFIELD_LANDING, KENNISON_ACADEMY
 
 # Graceful import — skip all tests if login/parsers.py isn't available yet
 try:

@@ -2,9 +2,9 @@ import logging
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse
 from speechwire_mcp.teams.parsers import (
-    parse_team_list_html,
-    parse_team_entries_html,
     parse_hybrid_entries_html,
+    parse_team_entries_html,
+    parse_team_list_html,
 )
 
 logger = logging.getLogger(__name__)

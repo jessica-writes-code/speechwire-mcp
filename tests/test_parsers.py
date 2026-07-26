@@ -1,5 +1,4 @@
 import pytest
-
 from fake_data import (
     ABBEY_BARTLET,
     CHARLIE_YOUNG,
@@ -23,14 +22,14 @@ from fake_data import (
     WILL_BAILEY,
     email_for,
 )
+
 from speechwire_mcp.judges.parsers import (
+    parse_availability_from_edit_html,
     parse_judge_edit_contact_html,
     parse_judge_list_from_html,
-    parse_availability_from_edit_html,
-    parse_school_from_edit_html,
     parse_judge_types_from_html,
+    parse_school_from_edit_html,
 )
-
 
 SAMPLE_EMAIL_HTML = f"""<!DOCTYPE html>
 <html>

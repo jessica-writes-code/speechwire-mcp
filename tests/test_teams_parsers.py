@@ -1,13 +1,6 @@
-from speechwire_mcp.teams.parsers import (
-    parse_team_list_html,
-    parse_team_entries_html,
-    parse_hybrid_entries_html,
-)
-
 from fake_data import (
     ABBEY_BARTLET,
     ANDREA_WYATT,
-    CJ_CREGG,
     ANNABETH_SCHOTT,
     ARNOLD_VINICK,
     BAILEY_HS,
@@ -15,6 +8,7 @@ from fake_data import (
     BOB_RUSSELL,
     BRAM_HOWARD,
     BRUNO_GIANELLI,
+    CJ_CREGG,
     CREGG_MS,
     DEBBIE_FIDERER,
     DONNA_MOSS,
@@ -36,14 +30,14 @@ from fake_data import (
     NASHUA_PREP,
     POTOMAC_ACADEMY,
     RITCHIE_HS,
-    RONNA_BECKMAN,
     RON_BUTTERFIELD,
+    RONNA_BECKMAN,
     RUSSELL_HS,
     SAGAMORE_PREP,
     SAM_SEABORN,
-    SEABORN_HS,
     SANTOS_ACADEMY,
     SANTOS_HS,
+    SEABORN_HS,
     STACKHOUSE_ACADEMY,
     TOBY_ZIEGLER,
     VINICK_ACADEMY,
@@ -51,6 +45,11 @@ from fake_data import (
     ZOEY_BARTLET,
 )
 
+from speechwire_mcp.teams.parsers import (
+    parse_hybrid_entries_html,
+    parse_team_entries_html,
+    parse_team_list_html,
+)
 
 # ---------------------------------------------------------------------------
 # Team List Parser Tests

@@ -3,22 +3,21 @@
 Uses fictional West Wing character names per project conventions.
 """
 
-from speechwire_mcp.results.parsers import parse_tab_sheet_from_html
-
 from fake_data import (
-    JED_BARTLET,
-    LEO_MCGARRY,
-    JOSH_LYMAN,
-    SAM_SEABORN,
-    TOBY_ZIEGLER,
-    CJ_CREGG,
     CHARLIE_YOUNG,
+    CJ_CREGG,
     DONNA_MOSS,
+    HARTSFIELD_LANDING,
+    JED_BARTLET,
+    JOSH_LYMAN,
+    LEO_MCGARRY,
     MANCHESTER_PREP,
     ROSSLYN_ACADEMY,
-    HARTSFIELD_LANDING,
+    SAM_SEABORN,
+    TOBY_ZIEGLER,
 )
 
+from speechwire_mcp.results.parsers import parse_tab_sheet_from_html
 
 # ---------------------------------------------------------------------------
 # Fixture HTML builders

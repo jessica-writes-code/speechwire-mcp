@@ -1,8 +1,8 @@
 """Tests for add_judge input validation and form data construction."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fake_data import JED_BARTLET, LEO_MCGARRY, email_for
 
 

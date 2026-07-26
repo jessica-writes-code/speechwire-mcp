@@ -8,8 +8,8 @@ import logging
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse
 from speechwire_mcp.rooms.parsers import (
-    parse_room_list_from_html,
     parse_room_counts_from_html,
+    parse_room_list_from_html,
     parse_room_usage_from_html,
 )
 

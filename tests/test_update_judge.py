@@ -1,8 +1,8 @@
 """Tests for update_judge_email, update_judge_availability, and update_judge_school."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fake_data import DONNA_MOSS, email_for
 
 
