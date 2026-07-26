@@ -9,6 +9,7 @@ def test_all_mcp_tool_parameters_have_typed_docstring_entries():
         parameters = tool.parameters.get("properties", {})
         assert ("\nParameters\n----------" in tool.description) is bool(parameters)
         assert "\nReturns\n-------" in tool.description
+        assert re.search(r"\nReturns\n-------\n\S+", tool.description)
         for parameter_name in parameters:
             typed_entry = rf"(?m)^\s*{re.escape(parameter_name)}\s*:\s*\S+"
             assert re.search(typed_entry, tool.description), (

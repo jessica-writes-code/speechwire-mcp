@@ -244,14 +244,14 @@ def speechwire_list_user_tournaments() -> list[dict]:
 def speechwire_select_user_tournament(tournament_id: int, circuit_id: int) -> dict:
     """Select a tournament to work with.
 
+    After calling this, tournament-specific tools become available.
+
     Parameters
     ----------
     tournament_id : int
         Tournament ID from speechwire_list_user_tournaments.
     circuit_id : int
         Circuit ID from speechwire_list_user_tournaments.
-
-    After calling this, tournament-specific tools become available.
 
     Returns
     -------
@@ -443,8 +443,7 @@ def speechwire_add_judge(
 def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
     """Update a judge's email address.
 
-    Prefetches the current edit form, merges the new email, and re-submits
-    all fields so that no existing values are lost.
+    Replaces the email while preserving the judge's other values.
 
     Parameters
     ----------
@@ -468,10 +467,7 @@ def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
 
 @mcp.tool()
 def speechwire_update_judge_availability(judge_id: int, available_slots: list[int]) -> dict:
-    """Update a judge's availability slots.
-
-    Prefetches the current edit form, replaces the slot checkboxes with the
-    provided list, and re-submits all fields so that no existing values are lost.
+    """Replace a judge's availability slots while preserving other values.
 
     Parameters
     ----------
@@ -498,8 +494,7 @@ def speechwire_update_judge_availability(judge_id: int, available_slots: list[in
 def speechwire_update_judge_school(judge_id: int, team_id: int) -> dict:
     """Update a judge's school (team) affiliation.
 
-    Prefetches the current edit form, merges the new team ID, and re-submits
-    all fields so that no existing values are lost.
+    Replaces the team affiliation while preserving the judge's other values.
 
     Parameters
     ----------
