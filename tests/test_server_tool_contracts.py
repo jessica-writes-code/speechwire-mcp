@@ -7,14 +7,17 @@ def test_all_mcp_tool_parameters_have_typed_docstring_entries():
     for tool in mcp._tool_manager._tools.values():
         assert tool.description
         parameters = tool.parameters.get("properties", {})
-        assert ("\nParameters\n----------" in tool.description) is bool(parameters)
-        assert "\nReturns\n-------" in tool.description
-        assert re.search(r"\nReturns\n-------\n\S+", tool.description)
+        has_parameters_section = bool(
+            re.search(r"(?m)^\s*Parameters\s*$\n\s*-{10}\s*$", tool.description)
+        )
+        assert has_parameters_section is bool(parameters)
+        assert re.search(r"(?m)^\s*Returns\s*$\n\s*-{7}\s*$", tool.description)
+        assert re.search(r"(?m)^\s*Returns\s*$\n\s*-{7}\s*$\n\s*\S+", tool.description)
         for parameter_name in parameters:
             typed_entry = rf"(?m)^\s*{re.escape(parameter_name)}\s*:\s*\S+"
-            assert re.search(typed_entry, tool.description), (
-                f"{tool.name}.{parameter_name} lacks a typed docstring entry"
-            )
+            assert re.search(
+                typed_entry, tool.description
+            ), f"{tool.name}.{parameter_name} lacks a typed docstring entry"
 
 
 def test_add_judge_schema_requires_discoverable_identifiers():
