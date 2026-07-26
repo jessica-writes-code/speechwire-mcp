@@ -6,7 +6,10 @@ from speechwire_mcp.server import mcp
 def test_all_mcp_tool_parameters_have_typed_docstring_entries():
     for tool in mcp._tool_manager._tools.values():
         assert tool.description
-        for parameter_name in tool.parameters.get("properties", {}):
+        parameters = tool.parameters.get("properties", {})
+        assert ("\nParameters\n----------" in tool.description) is bool(parameters)
+        assert "\nReturns\n-------" in tool.description
+        for parameter_name in parameters:
             typed_entry = rf"(?m)^\s*{re.escape(parameter_name)}\s*:\s*\S+"
             assert re.search(typed_entry, tool.description), (
                 f"{tool.name}.{parameter_name} lacks a typed docstring entry"
