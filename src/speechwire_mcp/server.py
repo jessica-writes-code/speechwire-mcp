@@ -20,7 +20,7 @@ try:
 
     _server_version = _get_version("speechwire-mcp")
 except Exception:
-    _server_version = "0.1.1"
+    _server_version = "0.1.2"
 
 from speechwire_mcp.client import (
     ClientState,
