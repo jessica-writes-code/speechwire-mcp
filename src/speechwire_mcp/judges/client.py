@@ -18,8 +18,23 @@ logger = logging.getLogger(__name__)
 _EMAIL_RE = re.compile(r"^[\w\.\+\-]+@[\w\.\-]+\.\w+$")
 
 
-def get_judge_list(client: SpeechWireClient) -> list[dict]:
-    """Retrieve judge list with roster details from the dashboard."""
+def is_valid_email(email: str) -> bool:
+    """Return whether an optional email has a provider-compatible format."""
+    return not email or bool(_EMAIL_RE.fullmatch(email.strip()))
+
+
+def get_judge_list(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
+    """Retrieve judge list with roster details from the dashboard.
+
+    Parameters
+    ----------
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
+    """
 
     # Local _parse wrapper filters out records with None judge_id (business logic,
     # not parsing) — this pattern is used when post-processing is needed after
@@ -34,13 +49,31 @@ def get_judge_list(client: SpeechWireClient) -> list[dict]:
         _parse,
         default=[],
         context="judge dashboard for list",
+        raise_on_error=raise_on_error,
     )
 
 
-def get_judge_contact(judge_id: int, client: SpeechWireClient) -> dict:
+def get_judge_contact(
+    judge_id: int,
+    client: SpeechWireClient,
+    *,
+    raise_on_error: bool = False,
+) -> dict:
     """Fetch judge edit page and return contact information.
 
-    Returns a dict with judge_id, email, phone.
+    Parameters
+    ----------
+    judge_id : int
+        Judge identifier from the tournament roster.
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty contact record.
+
+    Returns
+    -------
+    dict
+        Contact record containing judge_id, email, and phone.
     """
 
     # Local _parse wrapper injects the judge_id parameter into the result (business
@@ -64,6 +97,7 @@ def get_judge_contact(judge_id: int, client: SpeechWireClient) -> dict:
         },
         context=f"judge contact for {judge_id}",
         params={"judgeid": str(judge_id)},
+        raise_on_error=raise_on_error,
     )
 
 
@@ -126,13 +160,13 @@ def add_judge(
         Authenticated client with a tournament selected.
     judge_name : str
         Judge's full name (required).
-    judge_email : str
-        Email address (optional).
     team_id : int
         Team/school ID (required). Get valid IDs from speechwire_list_teams.
+    judge_email : str
+        Email address (optional).
     judge_type_id : int
-        Judge type code. Values are tournament-specific; check the
-        tournament's add-judge page for available options.
+        Tournament-specific judge type ID from speechwire_list_judge_types.
+        Use 0 when no configured judge type is selected.
     is_clean : bool
         Clean/neutral judge flag.
     is_coach : bool
@@ -140,7 +174,7 @@ def add_judge(
     is_priority : bool
         Priority judge flag.
     available_slots : list[int] | None
-        1-indexed time slot numbers the judge is available for.
+        Provider slot IDs for which the judge is available.
         If None or empty, judge is blocked for all slots.
 
     Returns
@@ -157,6 +191,8 @@ def add_judge(
             "judge_id": None,
             "error": "team_id is required (use speechwire_list_teams to find valid IDs)",
         }
+    if not is_valid_email(judge_email):
+        return {"success": False, "judge_id": None, "error": "invalid email format"}
 
     # --- pre-fetch the add-judge form (required for server-side session state) ---
     _ADD_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-add.php"
@@ -192,13 +228,17 @@ def add_judge(
     )
 
 
-def get_judge_types(client: SpeechWireClient) -> list[dict]:
+def get_judge_types(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
     """Fetch and parse the judge types for the active tournament.
 
     Parameters
     ----------
     client : SpeechWireClient
         Authenticated client with a tournament selected.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
 
     Returns
     -------
@@ -212,6 +252,7 @@ def get_judge_types(client: SpeechWireClient) -> list[dict]:
         parse_judge_types_from_html,
         default=[],
         context="judge types list",
+        raise_on_error=raise_on_error,
     )
 
 
@@ -316,7 +357,11 @@ def update_judge_email(judge_id: int, email: str, client: SpeechWireClient) -> d
 
     current = _prefetch_edit_form(judge_id, client)
     if current is None:
-        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "failed to prefetch edit form",
+        }
 
     form_data = _build_edit_form_data(judge_id, current, current["available_slots"])
     form_data["judgeemail"] = email.strip()
@@ -346,7 +391,7 @@ def update_judge_availability(
     judge_id : int
         ID of the judge to update.
     available_slots : list[int]
-        Slot indices the judge should be available for. Replaces any
+        Provider slot IDs for which the judge should be available. Replaces any
         previously checked slots.
     client : SpeechWireClient
         Authenticated client with a tournament selected.
@@ -360,7 +405,11 @@ def update_judge_availability(
 
     current = _prefetch_edit_form(judge_id, client)
     if current is None:
-        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "failed to prefetch edit form",
+        }
 
     form_data = _build_edit_form_data(judge_id, current, available_slots)
 
@@ -409,7 +458,11 @@ def update_judge_school(
 
     current = _prefetch_edit_form(judge_id, client)
     if current is None:
-        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "failed to prefetch edit form",
+        }
 
     form_data = _build_edit_form_data(judge_id, current, current["available_slots"])
     form_data["teamid"] = str(team_id)

@@ -345,6 +345,60 @@ class TestFetchAndParse:
         # The parser should receive data (either from first or retried call)
         assert isinstance(result, str)
 
+    def test_strict_fetch_raises_instead_of_returning_default(self):
+        from speechwire_mcp.client import SpeechWireReadError
+
+        _fetch_and_parse = _import_fetch_and_parse()
+        client = _make_client()
+
+        with (
+            patch.object(client, "get", side_effect=RuntimeError("unavailable")),
+            pytest.raises(SpeechWireReadError, match="Failed to fetch judge list"),
+        ):
+            _fetch_and_parse(
+                client,
+                "https://manage.speechwire.com/page",
+                lambda html: [],
+                [],
+                "judge list",
+                raise_on_error=True,
+            )
+
+    def test_strict_parse_raises_instead_of_returning_default(self):
+        from speechwire_mcp.client import SpeechWireReadError
+
+        _fetch_and_parse = _import_fetch_and_parse()
+        client = _make_client()
+
+        with (
+            patch.object(client, "get", return_value=_make_response("<html></html>")),
+            pytest.raises(SpeechWireReadError, match="Failed to parse judge list"),
+        ):
+            _fetch_and_parse(
+                client,
+                "https://manage.speechwire.com/page",
+                lambda html: 1 / 0,
+                [],
+                "judge list",
+                raise_on_error=True,
+            )
+
+    def test_strict_fetch_allows_successfully_parsed_empty_list(self):
+        _fetch_and_parse = _import_fetch_and_parse()
+        client = _make_client()
+
+        with patch.object(client, "get", return_value=_make_response("<html></html>")):
+            result = _fetch_and_parse(
+                client,
+                "https://manage.speechwire.com/page",
+                lambda html: [],
+                ["default"],
+                "empty list",
+                raise_on_error=True,
+            )
+
+        assert result == []
+
 
 # ---------------------------------------------------------------------------
 # 5. Edge cases — no infinite loops, safe failure
@@ -369,9 +423,7 @@ class TestEdgeCases:
         client.session = MagicMock()
         client.session.get = MagicMock(return_value=always_expired)
 
-        with patch.object(
-            client, "_authenticate", side_effect=SpeechWireAuthError("bad creds")
-        ):
+        with patch.object(client, "_authenticate", side_effect=SpeechWireAuthError("bad creds")):
             # get() should return the expired response (not loop)
             # or raise — either way, must terminate
             try:

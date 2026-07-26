@@ -15,13 +15,15 @@ from speechwire_mcp.structure.parsers import (
 logger = logging.getLogger(__name__)
 
 
-def get_timeslots(client: SpeechWireClient) -> list[dict]:
+def get_timeslots(client: SpeechWireClient, *, raise_on_error: bool = False) -> list[dict]:
     """Retrieve the tournament schedule (timeslots) from the slots-list page.
 
     Parameters
     ----------
     client : SpeechWireClient
         Authenticated client with an active tournament session.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
 
     Returns
     -------
@@ -35,6 +37,7 @@ def get_timeslots(client: SpeechWireClient) -> list[dict]:
         parse_timeslots_from_html,
         default=[],
         context="timeslots",
+        raise_on_error=raise_on_error,
     )
 
 

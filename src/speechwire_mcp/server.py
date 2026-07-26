@@ -20,7 +20,7 @@ try:
 
     _server_version = _get_version("speechwire-mcp")
 except Exception:
-    _server_version = "0.1.1"
+    _server_version = "0.1.2"
 
 from speechwire_mcp.client import (
     ClientState,
@@ -101,9 +101,7 @@ def _require_tournament(client: SpeechWireClient) -> dict | None:
         try:
             client.ensure_tournament_session()
         except Exception as exc:
-            logger.error(
-                "Auto-authentication with provided IDs failed: %s", type(exc).__name__
-            )
+            logger.error("Auto-authentication with provided IDs failed: %s", type(exc).__name__)
         if client.state == ClientState.TOURNAMENT_ACTIVE:
             return None
 
@@ -178,8 +176,12 @@ def _safe_tool_call(
 def speechwire_list_user_accounts() -> list[dict]:
     """List SpeechWire accounts available to the authenticated user.
 
-    Returns a list of records with: account_id (int), name (str).
     Call speechwire_select_user_account to choose one.
+
+    Returns
+    -------
+    list[dict]
+        Account records containing ``account_id`` (int) and ``name`` (str).
     """
     return _safe_tool_call(
         lambda: get_accounts(_get_client()),
@@ -198,7 +200,10 @@ def speechwire_select_user_account(account_id: int) -> dict:
     account_id : int
         Account ID from speechwire_list_user_accounts.
 
-    Returns a status dict confirming the selection.
+    Returns
+    -------
+    dict
+        Status record containing ``status`` (str) and ``account_id`` (int).
     """
 
     def _select() -> dict:
@@ -218,9 +223,14 @@ def speechwire_select_user_account(account_id: int) -> dict:
 def speechwire_list_user_tournaments() -> list[dict]:
     """List all tournaments (current and past seasons) for the selected account.
 
-    Returns a list with: tournament_id (int), circuit_id (int | None),
-    name (str), date (str | None), season (str: "current" or "past").
     Call speechwire_select_user_tournament to choose one.
+
+    Returns
+    -------
+    list[dict]
+        Tournament records containing ``tournament_id`` (int), ``circuit_id``
+        (int | None), ``name`` (str), ``date`` (str | None), and ``season``
+        (str: ``"current"`` or ``"past"``).
     """
     return _safe_tool_call(
         lambda: get_tournaments(_get_client()),
@@ -234,6 +244,8 @@ def speechwire_list_user_tournaments() -> list[dict]:
 def speechwire_select_user_tournament(tournament_id: int, circuit_id: int) -> dict:
     """Select a tournament to work with.
 
+    After calling this, tournament-specific tools become available.
+
     Parameters
     ----------
     tournament_id : int
@@ -241,7 +253,11 @@ def speechwire_select_user_tournament(tournament_id: int, circuit_id: int) -> di
     circuit_id : int
         Circuit ID from speechwire_list_user_tournaments.
 
-    After calling this, tournament-specific tools become available.
+    Returns
+    -------
+    dict
+        Status record containing ``status`` (str), ``tournament_id`` (int), and
+        ``circuit_id`` (int).
     """
 
     def _select() -> dict:
@@ -270,18 +286,21 @@ def speechwire_select_user_tournament(tournament_id: int, circuit_id: int) -> di
 def speechwire_list_judges() -> list[dict]:
     """List all judges registered for the tournament with roster details.
 
-    Returns a list of records, each containing:
-    - judge_id: int — numeric judge identifier
-    - name: str — judge's full name
-    - team: str | None — school or team name
-    - team_id: int | None — numeric team identifier
-    - is_coach: bool — whether the judge is marked as a coach
-    - is_active: bool — whether the judge is active
-    - is_clean: bool — whether the judge is marked clean
-    - is_priority: bool — whether the judge is marked priority
-    - email: str | None — judge's email address (if present on the roster page)
-    - unavailability: str | None — unavailability summary text
-    - blocks: list[str] — event/team blocks (e.g. "GROUPING: Varsity Policy Debate")
+    Returns
+    -------
+    list[dict]
+        Judge records containing:
+        - judge_id: int — numeric judge identifier
+        - name: str — judge's full name
+        - team: str | None — school or team name
+        - team_id: int | None — numeric team identifier
+        - is_coach: bool — whether the judge is marked as a coach
+        - is_active: bool — whether the judge is active
+        - is_clean: bool — whether the judge is marked clean
+        - is_priority: bool — whether the judge is marked priority
+        - email: str | None — judge's email address (if present on the roster page)
+        - unavailability: str | None — unavailability summary text
+        - blocks: list[str] — event/team blocks (e.g. "GROUPING: Varsity Policy Debate")
     """
     return _safe_tool_call(
         lambda: get_judge_list(_get_client()),
@@ -300,7 +319,11 @@ def speechwire_get_judge_contact(judge_id: int) -> dict:
     judge_id : int
         Numeric judge identifier from speechwire_list_judges.
 
-    Returns a dict with judge_id, email, and phone fields.
+    Returns
+    -------
+    dict
+        Contact record containing ``judge_id`` (int), ``email`` (str | None), and
+        ``phone`` (str | None).
     """
     return _safe_tool_call(
         lambda: get_judge_contact(judge_id, _get_client()),
@@ -319,10 +342,13 @@ def speechwire_get_judge_availability(judge_id: int) -> list[dict]:
     judge_id : int
         Numeric judge identifier from speechwire_list_judges.
 
-    Returns a list of timeslot records, each containing:
-    - slot_index: int — internal slot identifier
-    - label: str — human-readable time slot description
-    - available: bool — whether the judge is available
+    Returns
+    -------
+    list[dict]
+        Timeslot records containing:
+        - slot_index: int — internal slot identifier
+        - label: str — human-readable time slot description
+        - available: bool — whether the judge is available
     """
     return _safe_tool_call(
         lambda: get_judge_availability(judge_id, _get_client()),
@@ -341,7 +367,11 @@ def speechwire_get_judge_school(judge_id: int) -> dict:
     judge_id : int
         Numeric judge identifier from speechwire_list_judges.
 
-    Returns a dict with judge_id, school name, and team_id.
+    Returns
+    -------
+    dict
+        School record containing ``judge_id`` (int), ``school`` (str | None), and
+        ``team_id`` (int | None).
     """
     return _safe_tool_call(
         lambda: get_judge_school(judge_id, _get_client()),
@@ -354,8 +384,8 @@ def speechwire_get_judge_school(judge_id: int) -> dict:
 @mcp.tool()
 def speechwire_add_judge(
     judge_name: str,
+    team_id: int,
     judge_email: str = "",
-    team_id: int = 0,
     judge_type_id: int = 0,
     is_clean: bool = False,
     is_coach: bool = False,
@@ -368,13 +398,13 @@ def speechwire_add_judge(
     ----------
     judge_name : str
         Judge's full name (required).
-    judge_email : str
-        Email address (optional).
     team_id : int
         Team/school ID (required). Get valid IDs from speechwire_list_teams.
+    judge_email : str
+        Email address (optional).
     judge_type_id : int
-        Judge type code. Values are tournament-specific; check the
-        tournament's add-judge page for available options.
+        Tournament-specific judge type ID from speechwire_list_judge_types.
+        Use 0 when no configured judge type is selected.
     is_clean : bool
         Whether the judge is a clean/neutral judge.
     is_coach : bool
@@ -382,9 +412,14 @@ def speechwire_add_judge(
     is_priority : bool
         Whether the judge is a priority judge.
     available_slots : list[int] | None
-        List of 1-indexed time slot numbers the judge is available for.
+        Provider slot_id values from speechwire_list_timeslots for which the
+        judge is available.
         If omitted, the judge is blocked for all slots.
-        Get valid slot numbers from speechwire_list_timeslots.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
     """
     return _safe_tool_call(
         lambda: add_judge(
@@ -408,8 +443,7 @@ def speechwire_add_judge(
 def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
     """Update a judge's email address.
 
-    Prefetches the current edit form, merges the new email, and re-submits
-    all fields so that no existing values are lost.
+    Replaces the email while preserving the judge's other values.
 
     Parameters
     ----------
@@ -432,21 +466,16 @@ def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
 
 
 @mcp.tool()
-def speechwire_update_judge_availability(
-    judge_id: int, available_slots: list[int]
-) -> dict:
-    """Update a judge's availability slots.
-
-    Prefetches the current edit form, replaces the slot checkboxes with the
-    provided list, and re-submits all fields so that no existing values are lost.
+def speechwire_update_judge_availability(judge_id: int, available_slots: list[int]) -> dict:
+    """Replace a judge's availability slots while preserving other values.
 
     Parameters
     ----------
     judge_id : int
         ID of the judge to update.
     available_slots : list[int]
-        Slot indices the judge should be available for.
-        Get valid slot numbers from speechwire_list_timeslots.
+        Provider slot_id values from speechwire_list_timeslots for which the
+        judge should be available. Replaces all current availability.
 
     Returns
     -------
@@ -465,8 +494,7 @@ def speechwire_update_judge_availability(
 def speechwire_update_judge_school(judge_id: int, team_id: int) -> dict:
     """Update a judge's school (team) affiliation.
 
-    Prefetches the current edit form, merges the new team ID, and re-submits
-    all fields so that no existing values are lost.
+    Replaces the team affiliation while preserving the judge's other values.
 
     Parameters
     ----------
@@ -492,13 +520,15 @@ def speechwire_update_judge_school(judge_id: int, team_id: int) -> dict:
 def speechwire_list_judge_types() -> list[dict]:
     """List judge types configured for the tournament.
 
-    Returns a list of records, each containing:
-    - judge_type_id: int — numeric judge type identifier (use with speechwire_add_judge)
-    - judge_type: str — judge type name (e.g., "A", "B", "Speech judge")
-    - groupings: list[str] — grouping codes this type can judge
-                 (e.g., ["J-CX", "NRP-CX", "RO-CX"])
-
     If no judge types are configured for the tournament, returns an empty list.
+
+    Returns
+    -------
+    list[dict]
+        Judge type records containing:
+        - judge_type_id: int — identifier to use with speechwire_add_judge
+        - judge_type: str — name (e.g., "A", "B", "Speech judge")
+        - groupings: list[str] — grouping codes this type can judge
     """
     return _safe_tool_call(
         lambda: get_judge_types(_get_client()),
@@ -517,10 +547,13 @@ def speechwire_list_judge_types() -> list[dict]:
 def speechwire_list_rooms() -> list[dict]:
     """List all rooms configured for the tournament.
 
-    Returns a list of records, each containing:
-    - room_id: int — numeric room identifier
-    - name: str — room display name
-    - has_constraints: bool — whether the room has availability constraints
+    Returns
+    -------
+    list[dict]
+        Room records containing:
+        - room_id: int — numeric room identifier
+        - name: str — room display name
+        - has_constraints: bool — whether the room has availability constraints
     """
     return _safe_tool_call(
         lambda: get_room_list(_get_client()),
@@ -534,15 +567,14 @@ def speechwire_list_rooms() -> list[dict]:
 def speechwire_get_room_usage() -> list[dict]:
     """Get room time-slot usage showing assignments for every room.
 
-    Returns a list of records, each containing:
-    - room_id: int — numeric room identifier
-    - room_name: str — room display name
-    - time_slots: list[dict] — per-slot records with:
-        - slot_index: int — zero-based slot position
-        - time_label: str — human-readable time label
-        - status: str — one of "available", "timeblock", "unavailable", "assigned"
-        - event_code: str | None — event code (only when status is "assigned")
-        - round_number: int | None — round number (only when status is "assigned")
+    Returns
+    -------
+    list[dict]
+        Room usage records containing:
+        - room_id: int — numeric room identifier
+        - room_name: str — room display name
+        - time_slots: list[dict] — per-slot records with slot_index, time_label,
+          status, event_code, and round_number
     """
     return _safe_tool_call(
         lambda: get_room_usage(_get_client()),
@@ -560,13 +592,13 @@ def speechwire_get_room_counts() -> list[dict]:
     for each competition grouping in each round.  Useful for identifying
     rounds that are short on rooms.
 
-    Returns a list of records, each containing:
-    - grouping_name: str — competition grouping (e.g., "JV Policy Debate")
-    - rounds: list[dict] — per-round records with:
-        - round_number: int — 1-based round number
-        - rooms: int — number of rooms assigned
-        - sections: int — number of sections needed
-        - sufficient: bool — True when rooms >= sections
+    Returns
+    -------
+    list[dict]
+        Grouping records containing:
+        - grouping_name: str — competition grouping (e.g., "JV Policy Debate")
+        - rounds: list[dict] — per-round room and section counts with a
+          ``sufficient`` boolean
     """
     return _safe_tool_call(
         lambda: get_room_counts(_get_client()),
@@ -585,14 +617,17 @@ def speechwire_get_room_counts() -> list[dict]:
 def speechwire_list_teams() -> list[dict]:
     """List all teams registered for the tournament.
 
-    Returns a list of records, each containing:
-    - team_id: int — numeric team identifier
-    - name: str — team/school name
-    - code: str | None — team code abbreviation
-    - is_invited: bool — whether the team is invited
-    - is_attending: bool — whether the team is attending
-    - is_checked_in: bool — whether the team is checked in
-    - is_udl_member: bool — whether the team is a UDL member
+    Returns
+    -------
+    list[dict]
+        Team records containing:
+        - team_id: int — numeric team identifier
+        - name: str — team/school name
+        - code: str | None — team code abbreviation
+        - is_invited: bool — whether the team is invited
+        - is_attending: bool — whether the team is attending
+        - is_checked_in: bool — whether the team is checked in
+        - is_udl_member: bool — whether the team is a UDL member
     """
     return _safe_tool_call(
         lambda: get_team_list(_get_client()),
@@ -611,16 +646,18 @@ def speechwire_get_team_entries(team_id: int) -> list[dict]:
     team_id : int
         Numeric team identifier from speechwire_list_teams.
 
-    Returns a list of entry records, each containing:
-    - event_id: int — numeric event identifier
-    - event_name: str | None — event name (e.g., "Policy Debate (Varsity/JV/...)")
-    - entry_number: int — entry number within the event
-    - entry_code: str | None — entry code (e.g., "Potomac Aca AB")
-    - competitors: list[dict] — each with student_id (int), name (str),
-      competitor_number (int)
-    - division: str | None — division name
-    - division_id: int | None — numeric division identifier
-    - is_dropped: bool — whether the entry is dropped
+    Returns
+    -------
+    list[dict]
+        Entry records containing:
+        - event_id: int — numeric event identifier
+        - event_name: str | None — event name
+        - entry_number: int — entry number within the event
+        - entry_code: str | None — entry code
+        - competitors: list[dict] — student_id, name, and competitor_number
+        - division: str | None — division name
+        - division_id: int | None — numeric division identifier
+        - is_dropped: bool — whether the entry is dropped
     """
     return _safe_tool_call(
         lambda: get_team_entries(team_id, _get_client()),
@@ -634,13 +671,16 @@ def speechwire_get_team_entries(team_id: int) -> list[dict]:
 def speechwire_list_hybrid_entries() -> list[dict]:
     """List all hybrid entries (cross-school team entries) for the tournament.
 
-    Returns a list of hybrid entry records, each containing:
-    - comp_id: int — numeric competition entry identifier
-    - event: str — event name (e.g., "Policy Debate")
-    - division: str | None — division name (e.g., "JV", "Varsity")
-    - students: list[dict] — each with name (str) and school (str | None).
-    - code: str | None — entry code (e.g., "Hybrid Entries LyCr")
-    - team_blocks: list[str] — list of school names for team blocking
+    Returns
+    -------
+    list[dict]
+        Hybrid entry records containing:
+        - comp_id: int — numeric competition entry identifier
+        - event: str — event name
+        - division: str | None — division name
+        - students: list[dict] — student name and school records
+        - code: str | None — entry code
+        - team_blocks: list[str] — school names for team blocking
     """
     return _safe_tool_call(
         lambda: get_hybrid_entries(_get_client()),
@@ -659,14 +699,15 @@ def speechwire_list_hybrid_entries() -> list[dict]:
 def speechwire_list_timeslots() -> list[dict]:
     """List the tournament schedule timeslots.
 
-    Returns a list of records, each containing:
-    - slot_id: int — numeric timeslot identifier
-    - time: str — human-readable time (e.g., "9:00 AM")
-    - description: str | None — slot description (e.g., "Round 1")
-    - date: str | None — date for this slot (e.g., "Mar. 21, 2026")
-    - round_assignments: list[dict] — per-event assignments, each with:
-        - event_name: str — event column name (e.g., "EVT-A", "EVT-B")
-        - round_label: str | None — assigned round text (e.g., "Rd. 1") or None
+    Returns
+    -------
+    list[dict]
+        Timeslot records containing:
+        - slot_id: int — numeric timeslot identifier
+        - time: str — human-readable time (e.g., "9:00 AM")
+        - description: str | None — slot description
+        - date: str | None — date for this slot
+        - round_assignments: list[dict] — event_name and round_label records
     """
     return _safe_tool_call(
         lambda: get_timeslots(_get_client()),
@@ -680,12 +721,15 @@ def speechwire_list_timeslots() -> list[dict]:
 def speechwire_list_groupings() -> list[dict]:
     """List competition groupings configured for the tournament.
 
-    Returns a list of records, each containing:
-    - grouping_id: int — numeric grouping identifier
-    - name: str — full grouping name (e.g., "Varsity Lincoln-Douglas")
-    - abbreviation: str — short code (e.g., "EVT-A")
-    - event: str — event name (e.g., "Policy Debate")
-    - divisions: str — division text (e.g., "Open")
+    Returns
+    -------
+    list[dict]
+        Grouping records containing:
+        - grouping_id: int — numeric grouping identifier
+        - name: str — full grouping name
+        - abbreviation: str — short code
+        - event: str — event name
+        - divisions: str — division text
     """
     return _safe_tool_call(
         lambda: get_groupings(_get_client()),
@@ -704,10 +748,13 @@ def speechwire_list_groupings() -> list[dict]:
 def speechwire_list_schematic_events() -> list[dict]:
     """List all schematic events (debate/speech groupings) with available rounds.
 
-    Returns a list of records, each containing:
-    - grouping_id: int — numeric event identifier
-    - name: str — event name (e.g., "Varsity Policy Debate")
-    - rounds: list[int] — list of available round numbers for this event
+    Returns
+    -------
+    list[dict]
+        Event records containing:
+        - grouping_id: int — numeric event identifier
+        - name: str — event name
+        - rounds: list[int] — available round numbers
     """
     return _safe_tool_call(
         lambda: get_schematic_events(_get_client()),
@@ -728,13 +775,15 @@ def speechwire_get_round_schematic(grouping_id: int, round_number: int) -> dict 
     round_number : int
         Round number for this event.
 
-    Returns a dict containing:
-    - event_name: str — event name
-    - round: int — round number
-    - time: str | None — scheduled time for this round
-    - unused_judges: list[dict] — judges not yet assigned to sections
-    - sections: list[dict] — list of debate sections/rooms with assigned judges,
-      rooms, and competitors
+    Returns
+    -------
+    dict | list
+        Schematic containing:
+        - event_name: str — event name
+        - round: int — round number
+        - time: str | None — scheduled time
+        - unused_judges: list[dict] — unassigned judges
+        - sections: list[dict] — sections with judges, rooms, and competitors
     """
     return _safe_tool_call(
         lambda: get_round_schematic(grouping_id, round_number, _get_client()),
@@ -753,7 +802,7 @@ def speechwire_get_round_schematic(grouping_id: int, round_number: int) -> dict 
 def speechwire_get_tab_sheet(grouping_id: int) -> dict | list:
     """Get the results tab sheet for a competition grouping.
 
-    Returns round-by-round outcomes (W/L/BYE/FORFEIT), per-speaker scores,
+    Includes round-by-round outcomes (W/L/BYE/FORFEIT), per-speaker scores,
     win-loss records, total points, and final placements.
 
     Parameters
@@ -761,19 +810,14 @@ def speechwire_get_tab_sheet(grouping_id: int) -> dict | list:
     grouping_id : int
         Grouping identifier from speechwire_list_groupings.
 
-    Returns a dict containing:
-    - grouping_name: str — name of the grouping
-    - round_names: list[str] — round column headers (e.g., "Round 1")
-    - competitors: list[dict] — one per team, each with:
-        - comp_id: int — competitor identifier
-        - name: str — team display name
-        - rounds: list[dict] — per-round results with result, opponent, side,
-          judge, judge_number
-        - record: str — e.g. "3-0"
-        - total_points: float | None — combined speaker points
-        - placement: str — e.g. "2nd"
-        - speakers: list[dict] — individual speakers with name, round_scores,
-          total_points, and placement
+    Returns
+    -------
+    dict | list
+        Tab sheet containing:
+        - grouping_name: str — grouping name
+        - round_names: list[str] — round column headers
+        - competitors: list[dict] — team results, records, points, placements,
+          and speaker results
     """
     return _safe_tool_call(
         lambda: get_tab_sheet(grouping_id, _get_client()),

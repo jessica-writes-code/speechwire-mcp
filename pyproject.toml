@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "speechwire-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "Model Context Protocol (MCP) server for interacting with SpeechWire tournament management"
 readme = "README.md"
 license = "MIT"
@@ -33,7 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
-    "ruff>=0.4.0",
+    "ruff==0.15.12",
 ]
 
 [project.scripts]

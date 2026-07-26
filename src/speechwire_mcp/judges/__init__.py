@@ -8,6 +8,7 @@ from speechwire_mcp.judges.client import (
     update_judge_email,
     update_judge_availability,
     update_judge_school,
+    is_valid_email,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "update_judge_email",
     "update_judge_availability",
     "update_judge_school",
+    "is_valid_email",
 ]

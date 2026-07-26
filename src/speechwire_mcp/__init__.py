@@ -1,6 +1,10 @@
 """speechwire-mcp: Model Context Protocol server for SpeechWire tournament management."""
 
-from speechwire_mcp.client import SpeechWireClient, SpeechWireAuthError
+from speechwire_mcp.client import (
+    SpeechWireClient,
+    SpeechWireAuthError,
+    SpeechWireReadError,
+)
 from speechwire_mcp.judges import (
     get_judge_list,
     get_judge_contact,
@@ -17,6 +21,7 @@ from speechwire_mcp.results import get_tab_sheet
 __all__ = [
     "SpeechWireClient",
     "SpeechWireAuthError",
+    "SpeechWireReadError",
     "get_judge_list",
     "get_judge_contact",
     "get_judge_availability",
