@@ -10,13 +10,15 @@ from speechwire_mcp.teams.parsers import (
 logger = logging.getLogger(__name__)
 
 
-def get_team_list(client: SpeechWireClient) -> list[dict]:
+def get_team_list(client: SpeechWireClient, *, raise_on_error: bool = False) -> list[dict]:
     """Retrieve team list from the dashboard.
 
     Parameters
     ----------
     client : SpeechWireClient
         Authenticated client instance.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
 
     Returns
     -------
@@ -35,6 +37,7 @@ def get_team_list(client: SpeechWireClient) -> list[dict]:
         _parse,
         default=[],
         context="team list",
+        raise_on_error=raise_on_error,
     )
 
 

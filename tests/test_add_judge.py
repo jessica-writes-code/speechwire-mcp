@@ -46,6 +46,18 @@ class TestAddJudgeValidation:
         assert "team_id" in result["error"]
         client.post.assert_not_called()
 
+    def test_rejects_malformed_email(self):
+        add_judge = _import_add_judge()
+        client = MagicMock()
+
+        result = add_judge(client, "Test", team_id=42, judge_email="not-an-email")
+
+        assert result == {
+            "success": False,
+            "judge_id": None,
+            "error": "invalid email format",
+        }
+        client.post.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

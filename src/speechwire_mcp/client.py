@@ -25,6 +25,10 @@ class SpeechWireAuthError(Exception):
     pass
 
 
+class SpeechWireReadError(RuntimeError):
+    """Raised when provider data required for a write cannot be read safely."""
+
+
 class SpeechWireSelectionRequired(Exception):
     """Raised when multiple options are available and user must choose.
 
@@ -136,9 +140,7 @@ class SpeechWireClient:
         except RequestException as e:
             raise SpeechWireAuthError(f"Account selection failed: {e}") from e
 
-    def select_tournament(
-        self, tournament_id: str | int, circuit_id: str | int
-    ) -> None:
+    def select_tournament(self, tournament_id: str | int, circuit_id: str | int) -> None:
         """Phase C — select a tournament and activate the session.
 
         Parameters
@@ -227,9 +229,7 @@ class SpeechWireClient:
             self.select_account(accounts[0]["account_id"])
             logger.info("Auto-selected sole account: %s", accounts[0].get("name"))
         elif len(accounts) == 0:
-            raise SpeechWireAuthError(
-                "No accounts found for this login. Verify your credentials."
-            )
+            raise SpeechWireAuthError("No accounts found for this login. Verify your credentials.")
         else:
             raise SpeechWireSelectionRequired(
                 "Multiple accounts available — please select one.",
@@ -288,9 +288,7 @@ class SpeechWireClient:
         # Login form markers found in the response body.
         has_password_field = 'type="password"' in body or "type='password'" in body
         has_login_identity = (
-            'name="teamemail"' in body
-            or "name='teamemail'" in body
-            or "c-login.php" in body
+            'name="teamemail"' in body or "name='teamemail'" in body or "c-login.php" in body
         )
         return has_password_field and has_login_identity
 
@@ -343,6 +341,7 @@ def _fetch_and_parse(
     default: T,
     context: str = "",
     params: dict | None = None,
+    raise_on_error: bool = False,
 ) -> T:
     """Fetch a page and parse it, returning *default* on any failure.
 
@@ -360,22 +359,31 @@ def _fetch_and_parse(
         Human-readable label for log messages.
     params : dict | None
         Optional query parameters passed to ``requests.Session.get``.
+    raise_on_error : bool
+        Raise ``SpeechWireReadError`` instead of returning ``default`` when
+        fetching or parsing fails.
     """
     if not client:
         logger.error("No SpeechWire client provided")
+        if raise_on_error:
+            raise SpeechWireReadError(f"No SpeechWire client provided for {context}")
         return default
 
     try:
         resp = client.get(url, params=params)
         resp.raise_for_status()
-    except Exception:
+    except Exception as exc:
         logger.error("Failed to fetch %s", context)
+        if raise_on_error:
+            raise SpeechWireReadError(f"Failed to fetch {context}") from exc
         return default
 
     try:
         return parser(resp.text)
-    except Exception:
+    except Exception as exc:
         logger.error("Failed to parse %s", context)
+        if raise_on_error:
+            raise SpeechWireReadError(f"Failed to parse {context}") from exc
         return default
 
 
