@@ -4,7 +4,7 @@ Pure utility functions with no side effects, safe for reuse in all parsers.
 """
 
 import logging
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, element
 
@@ -45,9 +45,7 @@ def td_safe(tds: list[element.Tag], idx: int) -> element.Tag | None:
     return tds[idx] if idx < len(tds) else None
 
 
-def extract_int_query_param(
-    a_tag: element.Tag | None, param_name: str
-) -> int | None:
+def extract_int_query_param(a_tag: element.Tag | None, param_name: str) -> int | None:
     """Extract an integer query parameter from an anchor tag's href.
 
     Parameters
@@ -70,6 +68,6 @@ def extract_int_query_param(
         val = q.get(param_name, [None])[0]
         if val and str(val).isdigit():
             return int(val)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
     return None

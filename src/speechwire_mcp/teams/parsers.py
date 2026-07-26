@@ -1,6 +1,7 @@
 import logging
 import re
-from speechwire_mcp.parsing_helpers import make_soup, td_safe, extract_int_query_param
+
+from speechwire_mcp.parsing_helpers import extract_int_query_param, make_soup, td_safe
 
 logger = logging.getLogger(__name__)
 

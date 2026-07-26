@@ -11,7 +11,8 @@ Supports stdio and SSE transports. Configure via environment variables:
 
 import logging
 import os
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 from mcp.server.fastmcp import FastMCP
 
@@ -19,7 +20,7 @@ try:
     from importlib.metadata import version as _get_version
 
     _server_version = _get_version("speechwire-mcp")
-except Exception:
+except Exception:  # noqa: BLE001
     _server_version = "0.1.1"
 
 from speechwire_mcp.client import (
@@ -27,25 +28,25 @@ from speechwire_mcp.client import (
     SpeechWireClient,
 )
 from speechwire_mcp.judges import (
-    get_judge_list,
-    get_judge_contact,
-    get_judge_availability,
-    get_judge_school,
     add_judge,
+    get_judge_availability,
+    get_judge_contact,
+    get_judge_list,
+    get_judge_school,
     get_judge_types,
-    update_judge_email,
     update_judge_availability,
+    update_judge_email,
     update_judge_school,
 )
-from speechwire_mcp.schematics import (
-    get_schematic_events,
-    get_round_schematic,
-)
 from speechwire_mcp.login import get_accounts, get_tournaments
-from speechwire_mcp.rooms import get_room_list, get_room_usage, get_room_counts
-from speechwire_mcp.teams import get_team_list, get_team_entries, get_hybrid_entries
-from speechwire_mcp.structure import get_groupings, get_timeslots
 from speechwire_mcp.results import get_tab_sheet
+from speechwire_mcp.rooms import get_room_counts, get_room_list, get_room_usage
+from speechwire_mcp.schematics import (
+    get_round_schematic,
+    get_schematic_events,
+)
+from speechwire_mcp.structure import get_groupings, get_timeslots
+from speechwire_mcp.teams import get_hybrid_entries, get_team_entries, get_team_list
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,9 @@ def _get_client() -> SpeechWireClient:
         required = ["SPEECHWIRE_EMAIL", "SPEECHWIRE_PASSWORD"]
         missing = [k for k in required if not os.environ.get(k)]
         if missing:
-            raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+            raise RuntimeError(
+                f"Missing required environment variables: {', '.join(missing)}"
+            )
         _client = SpeechWireClient(
             email=os.environ["SPEECHWIRE_EMAIL"],
             password=os.environ["SPEECHWIRE_PASSWORD"],
@@ -100,8 +103,10 @@ def _require_tournament(client: SpeechWireClient) -> dict | None:
     if client.account_id and client.circuit_id and client.tournament_id:
         try:
             client.ensure_tournament_session()
-        except Exception as exc:
-            logger.error("Auto-authentication with provided IDs failed: %s", type(exc).__name__)
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                "Auto-authentication with provided IDs failed: %s", type(exc).__name__
+            )
         if client.state == ClientState.TOURNAMENT_ACTIVE:
             return None
 
@@ -162,7 +167,7 @@ def _safe_tool_call(
                 return guard  # type: ignore[return-value]
 
         return func()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.error("%s: %s", error_msg, type(exc).__name__)
         return default
 
@@ -466,7 +471,9 @@ def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
 
 
 @mcp.tool()
-def speechwire_update_judge_availability(judge_id: int, available_slots: list[int]) -> dict:
+def speechwire_update_judge_availability(
+    judge_id: int, available_slots: list[int]
+) -> dict:
     """Replace a judge's availability slots while preserving other values.
 
     Parameters

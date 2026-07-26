@@ -9,9 +9,9 @@ These tests verify the detection logic, recovery behavior, and edge cases.
 Tests skip gracefully if the implementation isn't landed yet.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fake_data import (
     CAPITOL_DEBATE_ADMIN,
     CAPITOL_DEBATE_ELEMENTARY,

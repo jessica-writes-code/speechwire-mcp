@@ -1,7 +1,3 @@
-from speechwire_mcp.schematics.parsers import (
-    parse_schematic_events_html,
-    parse_round_schematic_html,
-)
 from fake_data import (
     AINSLEY_HAYES,
     AMY_GARDNER,
@@ -14,6 +10,10 @@ from fake_data import (
     WILL_BAILEY,
 )
 
+from speechwire_mcp.schematics.parsers import (
+    parse_round_schematic_html,
+    parse_schematic_events_html,
+)
 
 # ---------------------------------------------------------------------------
 # Function 1: parse_schematic_events_html Tests
