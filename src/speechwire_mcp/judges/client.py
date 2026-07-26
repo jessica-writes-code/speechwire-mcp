@@ -126,13 +126,13 @@ def add_judge(
         Authenticated client with a tournament selected.
     judge_name : str
         Judge's full name (required).
-    judge_email : str
-        Email address (optional).
     team_id : int
         Team/school ID (required). Get valid IDs from speechwire_list_teams.
+    judge_email : str
+        Email address (optional).
     judge_type_id : int
-        Judge type code. Values are tournament-specific; check the
-        tournament's add-judge page for available options.
+        Tournament-specific judge type ID from speechwire_list_judge_types.
+        Use 0 when no configured judge type is selected.
     is_clean : bool
         Clean/neutral judge flag.
     is_coach : bool
@@ -140,7 +140,7 @@ def add_judge(
     is_priority : bool
         Priority judge flag.
     available_slots : list[int] | None
-        1-indexed time slot numbers the judge is available for.
+        Provider slot IDs for which the judge is available.
         If None or empty, judge is blocked for all slots.
 
     Returns
@@ -316,7 +316,11 @@ def update_judge_email(judge_id: int, email: str, client: SpeechWireClient) -> d
 
     current = _prefetch_edit_form(judge_id, client)
     if current is None:
-        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "failed to prefetch edit form",
+        }
 
     form_data = _build_edit_form_data(judge_id, current, current["available_slots"])
     form_data["judgeemail"] = email.strip()
@@ -346,7 +350,7 @@ def update_judge_availability(
     judge_id : int
         ID of the judge to update.
     available_slots : list[int]
-        Slot indices the judge should be available for. Replaces any
+        Provider slot IDs for which the judge should be available. Replaces any
         previously checked slots.
     client : SpeechWireClient
         Authenticated client with a tournament selected.
@@ -360,7 +364,11 @@ def update_judge_availability(
 
     current = _prefetch_edit_form(judge_id, client)
     if current is None:
-        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "failed to prefetch edit form",
+        }
 
     form_data = _build_edit_form_data(judge_id, current, available_slots)
 
@@ -409,7 +417,11 @@ def update_judge_school(
 
     current = _prefetch_edit_form(judge_id, client)
     if current is None:
-        return {"success": False, "judge_id": None, "error": "failed to prefetch edit form"}
+        return {
+            "success": False,
+            "judge_id": None,
+            "error": "failed to prefetch edit form",
+        }
 
     form_data = _build_edit_form_data(judge_id, current, current["available_slots"])
     form_data["teamid"] = str(team_id)

@@ -101,9 +101,7 @@ def _require_tournament(client: SpeechWireClient) -> dict | None:
         try:
             client.ensure_tournament_session()
         except Exception as exc:
-            logger.error(
-                "Auto-authentication with provided IDs failed: %s", type(exc).__name__
-            )
+            logger.error("Auto-authentication with provided IDs failed: %s", type(exc).__name__)
         if client.state == ClientState.TOURNAMENT_ACTIVE:
             return None
 
@@ -354,8 +352,8 @@ def speechwire_get_judge_school(judge_id: int) -> dict:
 @mcp.tool()
 def speechwire_add_judge(
     judge_name: str,
+    team_id: int,
     judge_email: str = "",
-    team_id: int = 0,
     judge_type_id: int = 0,
     is_clean: bool = False,
     is_coach: bool = False,
@@ -368,13 +366,13 @@ def speechwire_add_judge(
     ----------
     judge_name : str
         Judge's full name (required).
-    judge_email : str
-        Email address (optional).
     team_id : int
         Team/school ID (required). Get valid IDs from speechwire_list_teams.
+    judge_email : str
+        Email address (optional).
     judge_type_id : int
-        Judge type code. Values are tournament-specific; check the
-        tournament's add-judge page for available options.
+        Tournament-specific judge type ID from speechwire_list_judge_types.
+        Use 0 when no configured judge type is selected.
     is_clean : bool
         Whether the judge is a clean/neutral judge.
     is_coach : bool
@@ -382,9 +380,14 @@ def speechwire_add_judge(
     is_priority : bool
         Whether the judge is a priority judge.
     available_slots : list[int] | None
-        List of 1-indexed time slot numbers the judge is available for.
+        Provider slot_id values from speechwire_list_timeslots for which the
+        judge is available.
         If omitted, the judge is blocked for all slots.
-        Get valid slot numbers from speechwire_list_timeslots.
+
+    Returns
+    -------
+    dict
+        ``{"success": bool, "judge_id": int | None, "error": str | None}``
     """
     return _safe_tool_call(
         lambda: add_judge(
@@ -432,9 +435,7 @@ def speechwire_update_judge_email(judge_id: int, email: str) -> dict:
 
 
 @mcp.tool()
-def speechwire_update_judge_availability(
-    judge_id: int, available_slots: list[int]
-) -> dict:
+def speechwire_update_judge_availability(judge_id: int, available_slots: list[int]) -> dict:
     """Update a judge's availability slots.
 
     Prefetches the current edit form, replaces the slot checkboxes with the
@@ -445,8 +446,8 @@ def speechwire_update_judge_availability(
     judge_id : int
         ID of the judge to update.
     available_slots : list[int]
-        Slot indices the judge should be available for.
-        Get valid slot numbers from speechwire_list_timeslots.
+        Provider slot_id values from speechwire_list_timeslots for which the
+        judge should be available. Replaces all current availability.
 
     Returns
     -------
