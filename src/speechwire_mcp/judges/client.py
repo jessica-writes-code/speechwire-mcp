@@ -23,7 +23,9 @@ def is_valid_email(email: str) -> bool:
     return not email or bool(_EMAIL_RE.fullmatch(email.strip()))
 
 
-def get_judge_list(client: SpeechWireClient, *, raise_on_error: bool = False) -> list[dict]:
+def get_judge_list(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
     """Retrieve judge list with roster details from the dashboard.
 
     Parameters
@@ -156,8 +158,6 @@ def add_judge(
     ----------
     client : SpeechWireClient
         Authenticated client with a tournament selected.
-    raise_on_error : bool
-        Raise on provider read failure instead of returning an empty list.
     judge_name : str
         Judge's full name (required).
     team_id : int
@@ -228,13 +228,17 @@ def add_judge(
     )
 
 
-def get_judge_types(client: SpeechWireClient, *, raise_on_error: bool = False) -> list[dict]:
+def get_judge_types(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
     """Fetch and parse the judge types for the active tournament.
 
     Parameters
     ----------
     client : SpeechWireClient
         Authenticated client with a tournament selected.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
 
     Returns
     -------
