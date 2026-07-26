@@ -1,6 +1,8 @@
-from enum import Enum
-from typing import TypeVar, Callable
 import logging
+from collections.abc import Callable
+from enum import Enum
+from typing import TypeVar
+
 import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
@@ -22,7 +24,6 @@ class ClientState(Enum):
 class SpeechWireAuthError(Exception):
     """Raised when authentication fails (bad credentials, missing pages, etc.)."""
 
-    pass
 
 
 class SpeechWireReadError(RuntimeError):
@@ -419,12 +420,12 @@ def _post_and_parse(
     try:
         resp = client.post(url, data=data)
         resp.raise_for_status()
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.error("Failed to post %s", context)
         return default
 
     try:
         return parser(resp.text)
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.error("Failed to parse %s response", context)
         return default

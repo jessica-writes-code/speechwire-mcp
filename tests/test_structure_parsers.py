@@ -10,7 +10,6 @@ from speechwire_mcp.structure.parsers import (
     parse_timeslots_from_html,
 )
 
-
 # ---------------------------------------------------------------------------
 # Timeslot Parser Tests
 # ---------------------------------------------------------------------------

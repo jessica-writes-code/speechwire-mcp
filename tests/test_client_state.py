@@ -11,7 +11,6 @@ unimplemented code skip gracefully.
 """
 
 import pytest
-
 from fake_data import HARTSFIELD_LANDING, KENNISON_ACADEMY
 
 # ---------------------------------------------------------------------------
@@ -195,15 +194,17 @@ class TestStateGating:
 
         # Mock the HTTP session so the test never makes real network calls
         with (
-            patch.object(client.session, "post", side_effect=Exception("no network")),
-            patch.object(client.session, "get", side_effect=Exception("no network")),
+            patch.object(
+                client.session, "post", side_effect=RuntimeError("no network")
+            ),
+            patch.object(client.session, "get", side_effect=RuntimeError("no network")),
+            pytest.raises(RuntimeError),
         ):
-            with pytest.raises(Exception):
-                client.ensure_tournament_session()
+            client.ensure_tournament_session()
 
     def test_get_no_recursion_on_expired_session(self):
         """get() must not recurse when _authenticate also triggers get()."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         SpeechWireClient = _import_client()
         client = SpeechWireClient(email="u@example.com", password="p")

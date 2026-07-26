@@ -3,14 +3,14 @@ import re
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse, _post_and_parse
 from speechwire_mcp.judges.parsers import (
-    parse_judge_list_from_html,
-    parse_judge_edit_contact_html,
-    parse_availability_from_edit_html,
-    parse_school_from_edit_html,
     parse_add_judge_response,
+    parse_availability_from_edit_html,
     parse_edit_form_values,
     parse_edit_judge_response,
+    parse_judge_edit_contact_html,
+    parse_judge_list_from_html,
     parse_judge_types_from_html,
+    parse_school_from_edit_html,
 )
 
 logger = logging.getLogger(__name__)
@@ -199,7 +199,7 @@ def add_judge(
     _EDIT_JUDGE_URL = "https://manage.speechwire.com/tabroom/judges-edit.php"
     try:
         client.session.get(_ADD_JUDGE_URL)
-    except Exception:
+    except Exception:  # noqa: BLE001
         logger.warning("Failed to pre-fetch add-judge form")
 
     # --- build form data ---

@@ -2,8 +2,8 @@ import logging
 
 from speechwire_mcp.client import SpeechWireClient, _fetch_and_parse
 from speechwire_mcp.schematics.parsers import (
-    parse_schematic_events_html,
     parse_round_schematic_html,
+    parse_schematic_events_html,
 )
 
 logger = logging.getLogger(__name__)

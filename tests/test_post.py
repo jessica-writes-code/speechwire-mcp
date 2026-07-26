@@ -1,7 +1,8 @@
 """Tests for the POST infrastructure: SpeechWireClient.post() and _post_and_parse."""
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 def _import_client():

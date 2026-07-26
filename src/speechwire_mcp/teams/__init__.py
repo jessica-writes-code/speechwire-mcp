@@ -1,7 +1,7 @@
-from speechwire_mcp.teams.client import get_team_list, get_team_entries, get_hybrid_entries
+from speechwire_mcp.teams.client import get_hybrid_entries, get_team_entries, get_team_list
 
 __all__ = [
-    "get_team_list",
-    "get_team_entries",
     "get_hybrid_entries",
+    "get_team_entries",
+    "get_team_list",
 ]

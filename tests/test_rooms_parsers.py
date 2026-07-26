@@ -10,7 +10,6 @@ from speechwire_mcp.rooms.parsers import (
     parse_room_usage_from_html,
 )
 
-
 # ---------------------------------------------------------------------------
 # Room List Parser Tests
 # ---------------------------------------------------------------------------
@@ -87,9 +86,9 @@ def test_parse_room_list_fallback_to_edit_form():
     assert by_name["Gym"]["room_id"] == 300
     # Edit form doesn't carry constraint info
     for r in rooms:
-        assert r["has_constraints"] is False, (
-            f"Room '{r['name']}' should have has_constraints=False from edit form"
-        )
+        assert (
+            r["has_constraints"] is False
+        ), f"Room '{r['name']}' should have has_constraints=False from edit form"
 
 
 def test_parse_room_list_empty():
@@ -100,6 +99,7 @@ def test_parse_room_list_empty():
 # ---------------------------------------------------------------------------
 # Room Usage Parser Tests
 # ---------------------------------------------------------------------------
+
 
 def _build_usage_table(
     date: str = "Mar. 7, 2026",
@@ -177,16 +177,24 @@ def _room_row(room_id: int, room_name: str, cells: list[str]) -> str:
 ROOM_USAGE_HAPPY_HTML = _build_usage_table(
     time_slots=["8:00 AM", "9:00 AM", "10:00 AM"],
     room_rows=[
-        _room_row(199, "101", [
-            _room_cell_empty(),
-            _room_cell_assigned("J-CX", 1),
-            _room_cell_timeblock(),
-        ]),
-        _room_row(200, "102", [
-            _room_cell_assigned("J-LD", 2),
-            _room_cell_unavailable(),
-            _room_cell_empty(),
-        ]),
+        _room_row(
+            199,
+            "101",
+            [
+                _room_cell_empty(),
+                _room_cell_assigned("J-CX", 1),
+                _room_cell_timeblock(),
+            ],
+        ),
+        _room_row(
+            200,
+            "102",
+            [
+                _room_cell_assigned("J-LD", 2),
+                _room_cell_unavailable(),
+                _room_cell_empty(),
+            ],
+        ),
     ],
 )
 
@@ -236,11 +244,15 @@ def test_parse_room_usage_header_extraction():
     html = _build_usage_table(
         time_slots=time_labels,
         room_rows=[
-            _room_row(100, "A1", [
-                _room_cell_empty(),
-                _room_cell_assigned("J-PF", 1),
-                _room_cell_empty(),
-            ]),
+            _room_row(
+                100,
+                "A1",
+                [
+                    _room_cell_empty(),
+                    _room_cell_assigned("J-PF", 1),
+                    _room_cell_empty(),
+                ],
+            ),
         ],
     )
     rooms = parse_room_usage_from_html(html)
@@ -249,9 +261,9 @@ def test_parse_room_usage_header_extraction():
     slots = rooms[0]["time_slots"]
     assert len(slots) == 3
     for i, label in enumerate(time_labels):
-        assert slots[i]["time_label"] == label, (
-            f"Slot {i} expected time_label='{label}', got '{slots[i].get('time_label')}'"
-        )
+        assert (
+            slots[i]["time_label"] == label
+        ), f"Slot {i} expected time_label='{label}', got '{slots[i].get('time_label')}'"
 
 
 def test_parse_room_usage_empty_table():
@@ -265,10 +277,14 @@ def test_parse_room_usage_malformed_cells():
     html = _build_usage_table(
         time_slots=["8:00 AM", "9:00 AM"],
         room_rows=[
-            _room_row(150, "Lab", [
-                _room_cell_assigned_no_round("J-CX"),
-                _room_cell_empty(),
-            ]),
+            _room_row(
+                150,
+                "Lab",
+                [
+                    _room_cell_assigned_no_round("J-CX"),
+                    _room_cell_empty(),
+                ],
+            ),
         ],
     )
     rooms = parse_room_usage_from_html(html)
@@ -279,9 +295,9 @@ def test_parse_room_usage_malformed_cells():
     # Event code present but round number missing → graceful None
     assert slots[0]["status"] == "assigned"
     assert slots[0]["event_code"] == "J-CX"
-    assert slots[0]["round_number"] is None, (
-        "Missing round info should yield round_number=None"
-    )
+    assert (
+        slots[0]["round_number"] is None
+    ), "Missing round info should yield round_number=None"
 
     # Empty cell
     assert slots[1]["status"] == "available"
@@ -297,38 +313,34 @@ def test_parse_room_usage_skip_headers():
         "<td>Room</td>"
         "</tr>"
     )
-    time_header = (
-        "<tr class='tableheader'>"
-        "<td>8:00 AM</td><td>9:00 AM</td>"
-        "</tr>"
+    time_header = "<tr class='tableheader'>" "<td>8:00 AM</td><td>9:00 AM</td>" "</tr>"
+    data_row_1 = _room_row(
+        199,
+        "101",
+        [
+            _room_cell_assigned("J-CX", 1),
+            _room_cell_empty(),
+        ],
     )
-    data_row_1 = _room_row(199, "101", [
-        _room_cell_assigned("J-CX", 1),
-        _room_cell_empty(),
-    ])
-    data_row_2 = _room_row(200, "102", [
-        _room_cell_empty(),
-        _room_cell_assigned("J-LD", 3),
-    ])
+    data_row_2 = _room_row(
+        200,
+        "102",
+        [
+            _room_cell_empty(),
+            _room_cell_assigned("J-LD", 3),
+        ],
+    )
 
     # Interleave: header, data, header (repeat), data
-    table_body = "\n".join([
-        date_header,
-        time_header,
-        data_row_1,
-        date_header,
-        time_header,
-        data_row_2,
-    ])
-    html = (
-        f"<html><body><table class='dd'>\n{table_body}\n</table></body></html>"
+    table_body = (
+        f"{date_header}\n{time_header}\n{data_row_1}\n"
+        f"{date_header}\n{time_header}\n{data_row_2}"
     )
+    html = f"<html><body><table class='dd'>\n{table_body}\n</table></body></html>"
 
     rooms = parse_room_usage_from_html(html)
 
-    assert len(rooms) == 2, (
-        f"Expected 2 data rows (headers skipped), got {len(rooms)}"
-    )
+    assert len(rooms) == 2, f"Expected 2 data rows (headers skipped), got {len(rooms)}"
 
     names = {r["room_name"] for r in rooms}
     assert names == {"101", "102"}, f"Unexpected room names: {names}"
