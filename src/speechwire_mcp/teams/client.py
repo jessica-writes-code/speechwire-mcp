@@ -41,7 +41,9 @@ def get_team_list(client: SpeechWireClient, *, raise_on_error: bool = False) -> 
     )
 
 
-def get_team_entries(team_id: int, client: SpeechWireClient) -> list[dict]:
+def get_team_entries(
+    team_id: int, client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
     """Retrieve entries for a specific team.
 
     Parameters
@@ -50,6 +52,9 @@ def get_team_entries(team_id: int, client: SpeechWireClient) -> list[dict]:
         Numeric team identifier.
     client : SpeechWireClient
         Authenticated client instance.
+    raise_on_error : bool
+        Raise ``SpeechWireReadError`` on fetch or parse failure instead of
+        returning an empty list.
 
     Returns
     -------
@@ -64,16 +69,22 @@ def get_team_entries(team_id: int, client: SpeechWireClient) -> list[dict]:
         default=[],
         context=f"entries for team {team_id}",
         params={"teamid": str(team_id)},
+        raise_on_error=raise_on_error,
     )
 
 
-def get_hybrid_entries(client: SpeechWireClient) -> list[dict]:
+def get_hybrid_entries(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
     """Retrieve hybrid entries from the dashboard.
 
     Parameters
     ----------
     client : SpeechWireClient
         Authenticated client instance.
+    raise_on_error : bool
+        Raise ``SpeechWireReadError`` on fetch or parse failure instead of
+        returning an empty list.
 
     Returns
     -------
@@ -87,4 +98,5 @@ def get_hybrid_entries(client: SpeechWireClient) -> list[dict]:
         parse_hybrid_entries_html,
         default=[],
         context="hybrid entries",
+        raise_on_error=raise_on_error,
     )

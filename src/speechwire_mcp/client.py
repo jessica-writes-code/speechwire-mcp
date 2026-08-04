@@ -27,7 +27,7 @@ class SpeechWireAuthError(Exception):
 
 
 class SpeechWireReadError(RuntimeError):
-    """Raised when provider data required for a write cannot be read safely."""
+    """Raised when a strict Python API read cannot fetch or parse provider data."""
 
 
 class SpeechWireSelectionRequired(Exception):
