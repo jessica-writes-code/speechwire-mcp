@@ -9,14 +9,31 @@ from speechwire_mcp.schematics.parsers import (
 logger = logging.getLogger(__name__)
 
 
-def get_schematic_events(client: SpeechWireClient) -> list[dict]:
-    """Retrieve the list of schematic events with available rounds."""
+def get_schematic_events(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
+    """Retrieve the list of schematic events with available rounds.
+
+    Parameters
+    ----------
+    client : SpeechWireClient
+        Authenticated client instance.
+    raise_on_error : bool
+        Raise ``SpeechWireReadError`` on fetch or parse failure instead of
+        returning an empty list.
+
+    Returns
+    -------
+    list[dict]
+        Schematic events with their available rounds.
+    """
     return _fetch_and_parse(
         client,
         "https://manage.speechwire.com/tabroom/schem-view.php",
         parse_schematic_events_html,
         default=[],
         context="schematic events list",
+        raise_on_error=raise_on_error,
     )
 
 

@@ -21,7 +21,7 @@ try:
 
     _server_version = _get_version("speechwire-mcp")
 except Exception:  # noqa: BLE001
-    _server_version = "0.1.2"
+    _server_version = "0.1.3"
 
 from speechwire_mcp.client import (
     ClientState,

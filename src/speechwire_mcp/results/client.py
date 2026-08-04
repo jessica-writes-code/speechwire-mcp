@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 _BASE = "https://manage.speechwire.com/tabroom/tab-grouping.php"
 
 
-def get_tab_sheet(grouping_id: int, client: SpeechWireClient) -> dict:
+def get_tab_sheet(
+    grouping_id: int, client: SpeechWireClient, *, raise_on_error: bool = False
+) -> dict:
     """Retrieve the results tab sheet for a specific grouping.
 
     Parameters
@@ -23,6 +25,9 @@ def get_tab_sheet(grouping_id: int, client: SpeechWireClient) -> dict:
         Numeric grouping identifier (from ``speechwire_list_groupings``).
     client : SpeechWireClient
         Authenticated client with an active tournament session.
+    raise_on_error : bool
+        Raise ``SpeechWireReadError`` on fetch or parse failure instead of
+        returning an empty dictionary.
 
     Returns
     -------
@@ -45,4 +50,5 @@ def get_tab_sheet(grouping_id: int, client: SpeechWireClient) -> dict:
         default={},
         context=f"tab sheet for grouping {grouping_id}",
         params=params,
+        raise_on_error=raise_on_error,
     )
