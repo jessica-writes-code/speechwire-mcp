@@ -101,8 +101,23 @@ def get_judge_contact(
     )
 
 
-def get_judge_availability(judge_id: int, client: SpeechWireClient) -> list[dict]:
-    """Fetch and parse a judge's availability from their edit page."""
+def get_judge_availability(
+    judge_id: int,
+    client: SpeechWireClient,
+    *,
+    raise_on_error: bool = False,
+) -> list[dict]:
+    """Fetch and parse a judge's availability from their edit page.
+
+    Parameters
+    ----------
+    judge_id : int
+        Judge identifier from the tournament roster.
+    client : SpeechWireClient
+        Authenticated client with a tournament selected.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
+    """
     return _fetch_and_parse(
         client,
         "https://manage.speechwire.com/tabroom/judges-edit.php",
@@ -110,6 +125,7 @@ def get_judge_availability(judge_id: int, client: SpeechWireClient) -> list[dict
         default=[],
         context=f"availability for {judge_id}",
         params={"judgeid": str(judge_id)},
+        raise_on_error=raise_on_error,
     )
 
 

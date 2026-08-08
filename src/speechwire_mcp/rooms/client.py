@@ -60,13 +60,17 @@ def get_room_usage(client: SpeechWireClient) -> list[dict]:
     )
 
 
-def get_room_counts(client: SpeechWireClient) -> list[dict]:
+def get_room_counts(
+    client: SpeechWireClient, *, raise_on_error: bool = False
+) -> list[dict]:
     """Retrieve per-grouping room vs. section counts from the rooms-counts page.
 
     Parameters
     ----------
     client : SpeechWireClient
         Authenticated client with an active tournament session.
+    raise_on_error : bool
+        Raise on provider read failure instead of returning an empty list.
 
     Returns
     -------
@@ -80,4 +84,5 @@ def get_room_counts(client: SpeechWireClient) -> list[dict]:
         parse_room_counts_from_html,
         default=[],
         context="room counts",
+        raise_on_error=raise_on_error,
     )
