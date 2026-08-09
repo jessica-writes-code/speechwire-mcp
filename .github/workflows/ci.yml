@@ -19,4 +19,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
       - run: ruff check src/ tests/
-      - run: pytest
+      - run: pytest --cov=speechwire_mcp --cov-report=term-missing --cov-fail-under=84
