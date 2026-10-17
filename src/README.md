@@ -2,6 +2,49 @@
 
 This guide defines conventions for contributors changing code under `src/`.
 
+## Python SDK: Grouping/Round Entry Counts
+
+```python
+from speechwire_mcp.rooms import GroupingRoundCounts, get_grouping_round_counts
+
+counts: GroupingRoundCounts | None = get_grouping_round_counts(
+    grouping_id, round_number, client, raise_on_error=True
+)
+```
+
+The additive Python reader returns a `GroupingRoundCounts` TypedDict with four
+required integer fields: `grouping_id`, `round_number`, `entries`, and `sections`.
+It reads `rooms-groupings.php` with `params={"groupinground": "ID,ROUND"}` and
+parses the summary sentence, for example:
+`There are 8 sections in JV Policy Debate, Round 1. (20 entries)`.
+Entry counts do not depend on assigned rooms or created sections; an unpaired
+round can report zero sections and a nonzero entry count. Existing
+`get_room_counts` behavior is unchanged. No new MCP tool is registered.
+
+Supply a positive grouping ID from `get_groupings` and an applicable positive,
+1-based numeric round. The reader checks the round in the summary, but the
+summary does not contain a grouping ID: the result echoes the requested ID.
+It does not discover applicable rounds, interpret elimination rounds, or
+extrapolate a count from another round. Consumers must choose applicable rounds
+from tournament structure rather than treating an unavailable round as empty.
+
+Counts must be explicit nonnegative decimal integers, including valid zero.
+Missing, malformed, ambiguous, or wrong-round summaries are failures, not zero.
+With `raise_on_error=True`, fetch/authentication and parse failures raise the
+existing `SpeechWireReadError` (with the original cause); otherwise failures
+are logged and return `None`. Invalid nonpositive identifiers also follow this
+strict/lenient policy. Consumers estimating debate demand can use
+`(counts["entries"] + 1) // 2` for each division and sum those estimates, without
+falling back to `sections`.
+
+The endpoint URL is supported by existing room-count link fixtures; the detail
+markup is tested with synthetic screenshot-style HTML, not a live authenticated
+page. Other heading formats require verification before being supported.
+This API is not in published 0.1.4. Until a release containing it is available,
+integration requires installing this checkout (for example,
+`pip install -e /path/to/this/worktree`) rather than relying on a version range
+that can resolve to 0.1.4. No new dependencies are needed.
+
 ## Documenting MCP Tools
 
 An MCP tool docstring is a model-facing API contract. FastMCP publishes the
