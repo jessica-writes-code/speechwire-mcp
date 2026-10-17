@@ -8,7 +8,6 @@ from speechwire_mcp import SpeechWireAuthError, SpeechWireReadError
 from speechwire_mcp.rooms import GroupingRoundCounts, get_grouping_round_counts
 from speechwire_mcp.rooms.parsers import parse_grouping_round_counts_from_html
 
-
 SELECTION_PAGE_HTML = """
 <html><body>
 <p class="pagetitle">Rooms and competition groupings</p>
