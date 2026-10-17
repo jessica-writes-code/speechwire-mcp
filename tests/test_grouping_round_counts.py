@@ -9,6 +9,54 @@ from speechwire_mcp.rooms import GroupingRoundCounts, get_grouping_round_counts
 from speechwire_mcp.rooms.parsers import parse_grouping_round_counts_from_html
 
 
+SELECTION_PAGE_HTML = """
+<html><body>
+<p class="pagetitle">Rooms and competition groupings</p>
+<form id="form1" name="form1" method="post" action="rooms-groupings.php">
+  <select id='groupinground' name='groupinground'>
+    <option value='7,1'>JV Policy Debate, Round 1</option>
+    <option value='7,2'>JV Policy Debate, Round 2</option>
+    <option value='6,1'>Novice Policy Debate, Round 1</option>
+  </select>
+  <input type="submit" name="Submit" value="Select round and grouping"/>
+</form>
+</body></html>
+"""
+
+SELECTED_ROUND_PAGE_HTML = """
+<html><body>
+<p class="pagetitle">Rooms and competition groupings</p>
+<form id="form1" name="form1" method="post" action="rooms-groupings.php">
+  <select id='groupinground' name='groupinground'>
+    <option value='7,1'>JV Policy Debate, Round 1</option>
+    <option selected value='7,2'>JV Policy Debate, Round 2</option>
+    <option value='6,1'>Novice Policy Debate, Round 1</option>
+  </select>
+  <input type="submit" name="Submit" value="Select round and grouping"/>
+</form>
+<p><strong>There are 9 sections in JV Policy Debate, Round 2. (20 entries)</strong></p>
+<p class='sectiontitle'>The following 9 rooms have been assigned to JV Policy Debate, Round 2</p>
+<table class='dd'><tr><td width='120' class='dd'>
+  <a href='rooms-groupings.php?groupinground=7,2&roomid=128&mode=unassign'>143</a>
+</td></tr></table>
+<form id="form3" name="form3" method="post" action="rooms-groupings.php">
+  Copy this room setup to:
+  <select id='copyto' name='copyto'>
+    <option selected value='7,0'>JV Policy Debate, All prelim rounds</option>
+    <option value='7,1'>JV Policy Debate, Round 1</option>
+    <option value='7,2'>JV Policy Debate, Round 2</option>
+  </select>
+  <input name="Submit" type="submit" value="Copy rooms">
+  <input name='groupinground' id="groupinground" type="hidden" value="7,2"/>
+</form>
+<p class='sectiontitle'>The following rooms are not assigned at 11:00 AM</p>
+<table class='dd'><tr><td width='120' class='dd'>
+  <a href='rooms-groupings.php?groupinground=7,2&roomid=122&mode=assign'>121 Nurse</a>
+</td></tr></table>
+</body></html>
+"""
+
+
 def _detail_html(entries: int = 20, sections: int = 8, round_number: int = 1) -> str:
     return f"""
     <html><body>
@@ -24,6 +72,53 @@ def _client(html: str = "") -> MagicMock:
     client = MagicMock()
     client.get.return_value.text = html
     return client
+
+
+def test_real_selected_round_page_counts_are_independent_of_room_controls():
+    assert parse_grouping_round_counts_from_html(SELECTED_ROUND_PAGE_HTML, 7, 2) == {
+        "grouping_id": 7,
+        "round_number": 2,
+        "entries": 20,
+        "sections": 9,
+    }
+
+
+def test_reader_gets_real_selected_page_without_submitting_or_following_room_controls():
+    client = _client(SELECTED_ROUND_PAGE_HTML)
+
+    assert get_grouping_round_counts(7, 2, client, raise_on_error=True) == {
+        "grouping_id": 7,
+        "round_number": 2,
+        "entries": 20,
+        "sections": 9,
+    }
+    client.get.assert_called_once_with(
+        "https://manage.speechwire.com/tabroom/rooms-groupings.php",
+        params={"groupinground": "7,2"},
+    )
+    client.post.assert_not_called()
+
+
+def test_real_selection_only_page_is_not_a_zero_count():
+    with pytest.raises(ValueError, match="Expected one"):
+        parse_grouping_round_counts_from_html(SELECTION_PAGE_HTML, 7, 2)
+
+
+@pytest.mark.parametrize("strict", [False, True])
+def test_reader_does_not_submit_selection_only_page(strict):
+    client = _client(SELECTION_PAGE_HTML)
+
+    if strict:
+        with pytest.raises(SpeechWireReadError, match="Failed to parse"):
+            get_grouping_round_counts(7, 2, client, raise_on_error=True)
+    else:
+        assert get_grouping_round_counts(7, 2, client) is None
+
+    client.get.assert_called_once_with(
+        "https://manage.speechwire.com/tabroom/rooms-groupings.php",
+        params={"groupinground": "7,2"},
+    )
+    client.post.assert_not_called()
 
 
 @pytest.mark.parametrize(

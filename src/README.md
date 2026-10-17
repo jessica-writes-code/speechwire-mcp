@@ -34,12 +34,21 @@ With `raise_on_error=True`, fetch/authentication and parse failures raise the
 existing `SpeechWireReadError` (with the original cause); otherwise failures
 are logged and return `None`. Invalid nonpositive identifiers also follow this
 strict/lenient policy. Consumers estimating debate demand can use
-`(counts["entries"] + 1) // 2` for each division and sum those estimates, without
+`counts["entries"] // 2` (rounded down) for each division and sum those estimates, without
 falling back to `sections`.
 
-The endpoint URL is supported by existing room-count link fixtures; the detail
-markup is tested with synthetic screenshot-style HTML, not a live authenticated
-page. Other heading formats require verification before being supported.
+The tournament administrator confirmed that opening
+`rooms-groupings.php?groupinground=7,2` directly with GET returns the count heading
+without submitting a form. Tests include reduced administrator-supplied HTML for
+both the selection-only page and the selected-round page, including its POST
+selection/copy forms and room-assignment links. The selected page reports
+`There are 9 sections in JV Policy Debate, Round 2. (20 entries)`.
+The reader makes only the count-page GET request: it does not submit forms,
+copy rooms, or follow assignment/unassignment links. A selection-only response
+without a count heading is a read failure, not zero entries. Unpaired-round
+coverage remains synthetic; the administrator separately confirmed that the
+entry total was available before pairing. Other heading formats require
+verification before being supported.
 This API is not in published 0.1.4. Until a release containing it is available,
 integration requires installing this checkout (for example,
 `pip install -e /path/to/this/worktree`) rather than relying on a version range
