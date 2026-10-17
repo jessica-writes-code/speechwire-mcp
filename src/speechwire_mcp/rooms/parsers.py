@@ -6,6 +6,7 @@ No side effects — safe for unit testing with fixture HTML.
 
 import logging
 import re
+from typing import TypedDict
 
 from bs4 import Tag
 
@@ -14,6 +15,61 @@ from speechwire_mcp.parsing_helpers import extract_int_query_param, make_soup, t
 logger = logging.getLogger(__name__)
 
 _CONSTRAINTS_RE = re.compile(r"\s*\(has constraints\)\s*$", re.IGNORECASE)
+
+_GROUPING_ROUND_COUNTS_RE = re.compile(
+    r"\bThere\s+(?:are|is)\s+([0-9]+)\s+sections?\s+in\s+"
+    r".+?,\s*Round\s+([0-9]+)\s*\.\s*"
+    r"\(\s*([0-9]+)\s+entr(?:y|ies)\s*\)",
+    re.IGNORECASE,
+)
+
+
+class GroupingRoundCounts(TypedDict):
+    """Counts reported for one requested competition grouping and round."""
+
+    grouping_id: int
+    round_number: int
+    entries: int
+    sections: int
+
+
+def parse_grouping_round_counts_from_html(
+    html: str, grouping_id: int, round_number: int
+) -> GroupingRoundCounts:
+    """Parse the counts sentence on a rooms-groupings.php detail page.
+
+    Parameters
+    ----------
+    html : str
+        Raw room-detail HTML containing the section/entry summary.
+    grouping_id : int
+        Requested grouping ID, echoed in the result; not present in the summary.
+    round_number : int
+        Requested 1-based round number, checked against the summary.
+
+    Returns
+    -------
+    GroupingRoundCounts
+        Requested identifiers and nonnegative ``entries`` and ``sections``.
+
+    Raises
+    ------
+    ValueError
+        The summary is absent, malformed, ambiguous, or for a different round.
+    """
+    text = " ".join(make_soup(html).get_text(separator=" ", strip=True).split())
+    matches = list(_GROUPING_ROUND_COUNTS_RE.finditer(text))
+    if len(matches) != 1:
+        raise ValueError("Expected one grouping/round section and entry summary")
+    match = matches[0]
+    if int(match.group(2)) != round_number:
+        raise ValueError("Grouping/round summary does not match the requested round")
+    return {
+        "grouping_id": grouping_id,
+        "round_number": round_number,
+        "entries": int(match.group(3)),
+        "sections": int(match.group(1)),
+    }
 
 
 def parse_room_list_from_html(html: str) -> list[dict]:
